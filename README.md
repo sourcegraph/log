@@ -1,5 +1,7 @@
-# `github.com/sourcegraph/log` (formerly `lib/log`)
+# `github.com/sourcegraph/log`
 
-> OpenTelemetry-compatible Zap logger
+[![Go Reference](https://pkg.go.dev/badge/github.com/sourcegraph/log.svg)](https://pkg.go.dev/github.com/sourcegraph/log) [![Pipeline](https://github.com/sourcegraph/log/actions/workflows/pipeline.yml/badge.svg)](https://github.com/sourcegraph/log/actions/workflows/pipeline.yml) [![codecov](https://codecov.io/gh/sourcegraph/log/branch/main/graph/badge.svg?token=LJ4QHFAJEJ)](https://codecov.io/gh/sourcegraph/log)
+
+> OpenTelemetry-compatible Zap logger for Sourcegraph (formerly `lib/log`)
 
 Learn more: [How to add logging](https://docs.sourcegraph.com/dev/how-to/add_logging)
