@@ -4,4 +4,7 @@
 
 > OpenTelemetry-compatible Zap logger for Sourcegraph (formerly `lib/log`)
 
-Learn more: [How to add logging](https://docs.sourcegraph.com/dev/how-to/add_logging)
+Learn more:
+
+- [Adminstration: Logging](https://docs.sourcegraph.com/admin/observability/logs)
+- [Development: How to add logging](https://docs.sourcegraph.com/dev/how-to/add_logging)
