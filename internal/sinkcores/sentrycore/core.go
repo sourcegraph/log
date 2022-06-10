@@ -2,9 +2,11 @@
 // function if and only if the log level is superior or equal to Warn.
 //
 // In order to not slow down logging when it's not necessary:
-// - the underlying zapcore.Core is only processing logging events on Warn and above levels.
-// - consuming log events and processing them for sentry reporting are both asynchronous. This deflects
-//   most of the work into the processing go routine and leverage Sentry's client ability to send reports in batches.
+//
+// a) the underlying zapcore.Core is only processing logging events on Warn and above levels.
+//
+// b) consuming log events and processing them for sentry reporting are both asynchronous. This deflects
+// most of the work into the processing go routine and leverage Sentry's client ability to send reports in batches.
 //
 // In the eventuality of saturating the events buffer by producing errors quicker than we can produce them, they will
 // be purely dropped.
