@@ -111,9 +111,11 @@ func (w *worker) capture(errCtx *errorContext) {
 		//
 		// Additionally we include prefix the error with the log message, because usually
 		// when we log an error it is analagous to "wrapping" the error with a fixed
-		// description.
-		event.Exception[0].Type = fmt.Sprintf("%s: %s",
-			errCtx.Message, errors.Cause(errCtx.Error).Error())
+		// description. And of course we include the scope, because we want to promote
+		// its use as ways to identify and understand the context of observability
+		// elements.
+		event.Exception[0].Type = fmt.Sprintf("[%s] %s: %s",
+			errCtx.Scope, errCtx.Message, errors.Cause(errCtx.Error).Error())
 	}
 
 	// Tags are indexed fields that can be used to filter errors with.
