@@ -8,3 +8,4 @@ Learn more:
 
 - [Adminstration: Logging](https://docs.sourcegraph.com/admin/observability/logs)
 - [Development: How to add logging](https://docs.sourcegraph.com/dev/how-to/add_logging)
+- [Package docs](https://pkg.go.dev/github.com/sourcegraph/log)
