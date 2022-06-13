@@ -11,9 +11,15 @@ import (
 )
 
 const (
-	envSrcDevelopment = "SRC_DEVELOPMENT"
-	envSrcLogFormat   = "SRC_LOG_FORMAT"
-	envSrcLogLevel    = "SRC_LOG_LEVEL"
+	// EnvDevelopment is key of the environment variable that is used to set whether
+	// to use development logger configuration on Init.
+	EnvDevelopment = "SRC_DEVELOPMENT"
+	// EnvLogLevel is key of the environment variable that is used to set the log format
+	// on Init.
+	EnvLogFormat = "SRC_LOG_FORMAT"
+	// EnvLogLevel is key of the environment variable that can be used to set the log
+	// level on Init.
+	EnvLogLevel = "SRC_LOG_LEVEL"
 )
 
 type Resource = otfields.Resource
@@ -44,9 +50,9 @@ func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
 		panic("log.Init initialized multiple times")
 	}
 
-	level := zap.NewAtomicLevelAt(Level(os.Getenv(envSrcLogLevel)).Parse())
-	format := encoders.ParseOutputFormat(os.Getenv(envSrcLogFormat))
-	development := os.Getenv(envSrcDevelopment) == "true"
+	level := zap.NewAtomicLevelAt(Level(os.Getenv(EnvLogLevel)).Parse())
+	format := encoders.ParseOutputFormat(os.Getenv(EnvLogFormat))
+	development := os.Getenv(EnvDevelopment) == "true"
 
 	sinks := Sinks(s)
 	update := sinks.Update
