@@ -39,7 +39,7 @@ type PostInitCallbacks struct {
 //
 // For testing, you can use 'logtest.Init' to initialize the logging library.
 //
-// If Init is not called, Get will panic.
+// If Init is not called, trying to create a logger with Scoped will panic.
 func Init(r Resource, s ...Sink) *PostInitCallbacks {
 	if globallogger.IsInitialized() {
 		panic("log.Init initialized multiple times")
@@ -50,12 +50,15 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 	development := os.Getenv(envSrcDevelopment) == "true"
 
 	ss := sinks(s)
-	cores, err := ss.build()
+	cores, sinksBuildErr := ss.build()
+
+	// Init the logger first, so that we can log the error if needed
 	sync := globallogger.Init(r, level, format, development, cores)
 
-	if err != nil {
+	if sinksBuildErr != nil {
 		// Log the error
-		Scoped("log.init", "logger initialization").Fatal("core initialization failed", Error(err))
+		Scoped("log.init", "logger initialization").
+			Fatal("sinks initialization failed", Error(sinksBuildErr))
 	}
 
 	return &PostInitCallbacks{
