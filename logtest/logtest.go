@@ -10,10 +10,10 @@ import (
 	"go.uber.org/zap/zaptest/observer"
 
 	"github.com/sourcegraph/log"
+	"github.com/sourcegraph/log/internal/configurable"
 	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/otfields"
-	"github.com/stretchr/testify/assert"
 )
 
 // Init can be used to instantiate the log package for running tests, to be called in
@@ -49,13 +49,6 @@ func initGlobal(level zapcore.Level) {
 	globallogger.Init(otfields.Resource{}, level, encoders.OutputConsole, true, nil)
 }
 
-// configurableAdapter exposes internal APIs on zapAdapter.
-type configurableAdapter interface {
-	log.Logger
-
-	WithCore(func(c zapcore.Core) zapcore.Core) log.Logger
-}
-
 type CapturedLog struct {
 	Time    time.Time
 	Scope   string
@@ -82,10 +75,10 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 	root := log.Scoped(t.Name(), "")
 
 	// Cast into internal API
-	configurable := root.(configurableAdapter)
+	cl := configurable.Cast(root)
 
 	// Hook test output
-	return configurable.WithCore(func(c zapcore.Core) zapcore.Core {
+	return cl.WithCore(func(c zapcore.Core) zapcore.Core {
 		var level zapcore.LevelEnabler = c // by default, use the parent core's leveller
 		if options.Level != "" {
 			level = zap.NewAtomicLevelAt(options.Level.Parse())
@@ -112,31 +105,19 @@ func ScopedWith(t testing.TB, options LoggerOptions) log.Logger {
 
 // Captured retrieves a logger from scoped to the the given test, and returns a callback,
 // dumpLogs, which flushes the logger buffer and returns log entries.
-func Captured(t testing.TB, s ...log.Sink) (logger log.Logger, exportLogs func() []CapturedLog) {
+func Captured(t testing.TB) (logger log.Logger, exportLogs func() []CapturedLog) {
 	// Cast into internal APIs
-	configurable := scopedTestLogger(t, LoggerOptions{}).(configurableAdapter)
+	cl := configurable.Cast(scopedTestLogger(t, LoggerOptions{}))
 
 	observerCore, entries := observer.New(zap.DebugLevel) // capture all levels
-	var cores []zapcore.Core
 
-	sinks := log.Sinks(s)
-	cores, err := sinks.Build()
-	if err != nil {
-		assert.NoError(t, err)
-	}
-
-	logger = configurable.WithCore(func(c zapcore.Core) zapcore.Core {
-		return zapcore.NewTee(append(cores, observerCore, c)...)
+	logger = cl.WithCore(func(c zapcore.Core) zapcore.Core {
+		return zapcore.NewTee(c, observerCore)
 	})
 
 	return logger, func() []CapturedLog {
-		for _, c := range cores {
-			err := c.Sync()
-			if err != nil {
-				t.Logf("core %t failed to Sync(): %q", c, err)
-				t.Fail()
-			}
-		}
+		observerCore.Sync()
+
 		entries := entries.TakeAll()
 		logs := make([]CapturedLog, len(entries))
 		for i, e := range entries {

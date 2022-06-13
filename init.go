@@ -24,9 +24,9 @@ const (
 
 type Resource = otfields.Resource
 
-// PostInitializationCallbacks wraps the callbacks that enables to sync and update the
-// sinks used by the logger on configuration changes.
-type PostInitializationCallbacks struct {
+// PostInitCallbacks is a set of callbacks returned by Init that enables finalization and
+// updating of any configured sinks.
+type PostInitCallbacks struct {
 	// Sync must be called before application exit, such as via defer.
 	Sync func() error
 
@@ -40,12 +40,13 @@ type PostInitializationCallbacks struct {
 // It must be called on service startup, i.e. 'main()', NOT on an 'init()' function.
 // Subsequent calls will panic, so do not call this within a non-service context.
 //
-// Init returns a callback, sync, that should be called before application exit.
+// Init returns a set of callbacks - see PostInitCallbacks for more details. The Sync
+// callback in particular must be called before application exit.
 //
 // For testing, you can use 'logtest.Init' to initialize the logging library.
 //
-// If Init is not called, Get will panic.
-func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
+// If Init is not called, trying to create a logger with Scoped will panic.
+func Init(r Resource, s ...Sink) *PostInitCallbacks {
 	if globallogger.IsInitialized() {
 		panic("log.Init initialized multiple times")
 	}
@@ -54,18 +55,20 @@ func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
 	format := encoders.ParseOutputFormat(os.Getenv(EnvLogFormat))
 	development := os.Getenv(EnvDevelopment) == "true"
 
-	sinks := Sinks(s)
-	update := sinks.Update
-	cores, err := sinks.Build()
+	ss := sinks(s)
+	cores, sinksBuildErr := ss.build()
+
+	// Init the logger first, so that we can log the error if needed
 	sync := globallogger.Init(r, level, format, development, cores)
 
-	if err != nil {
+	if sinksBuildErr != nil {
 		// Log the error
-		Scoped("log.init", "logger initialization").Fatal("core initialization failed", Error(err))
+		Scoped("log.init", "logger initialization").
+			Fatal("sinks initialization failed", Error(sinksBuildErr))
 	}
 
-	return &PostInitializationCallbacks{
+	return &PostInitCallbacks{
 		Sync:   sync,
-		Update: update,
+		Update: ss.update,
 	}
 }
