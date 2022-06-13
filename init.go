@@ -18,9 +18,9 @@ const (
 
 type Resource = otfields.Resource
 
-// PostInitializationCallbacks wraps the callbacks that enables to sync and update the
-// sinks used by the logger on configuration changes.
-type PostInitializationCallbacks struct {
+// PostInitCallbacks is a set of callbacks returned by Init that enables finalization and
+// updating of any configured sinks.
+type PostInitCallbacks struct {
 	// Sync must be called before application exit, such as via defer.
 	Sync func() error
 
@@ -34,13 +34,13 @@ type PostInitializationCallbacks struct {
 // It must be called on service startup, i.e. 'main()', NOT on an 'init()' function.
 // Subsequent calls will panic, so do not call this within a non-service context.
 //
-// Init returns a set of callbacks - see PostInitializationCallbacks for more details.
-// The Sync callback in particular must be called before application exit.
+// Init returns a set of callbacks - see PostInitCallbacks for more details. The Sync
+// callback in particular must be called before application exit.
 //
 // For testing, you can use 'logtest.Init' to initialize the logging library.
 //
 // If Init is not called, Get will panic.
-func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
+func Init(r Resource, s ...Sink) *PostInitCallbacks {
 	if globallogger.IsInitialized() {
 		panic("log.Init initialized multiple times")
 	}
@@ -58,7 +58,7 @@ func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
 		Scoped("log.init", "logger initialization").Fatal("core initialization failed", Error(err))
 	}
 
-	return &PostInitializationCallbacks{
+	return &PostInitCallbacks{
 		Sync:   sync,
 		Update: ss.update,
 	}
