@@ -10,9 +10,11 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/sourcegraph/log"
+	"github.com/sourcegraph/log/internal/configurable"
 	"github.com/sourcegraph/log/internal/sinkcores/sentrycore"
 	"github.com/sourcegraph/log/logtest"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -269,9 +271,21 @@ func logWithLevel(logger log.Logger, level zapcore.Level, msg string, fields ...
 
 func newTestLogger(t testing.TB) (log.Logger, *sentrycore.TransportMock, func()) {
 	transport := &sentrycore.TransportMock{}
-	sink := log.NewSentrySinkWithOptions(sentry.ClientOptions{Transport: transport})
-	logger, exportLogs := logtest.Captured(t, sink)
-	return logger, transport, func() { _ = exportLogs() }
+	client, err := sentry.NewClient(sentry.ClientOptions{Transport: transport})
+	require.NoError(t, err)
+
+	core := sentrycore.NewCore(sentry.NewHub(client, sentry.NewScope()))
+
+	cl := configurable.Cast(logtest.Scoped(t))
+
+	return cl.WithCore(func(c zapcore.Core) zapcore.Core {
+			return zapcore.NewTee(c, core)
+		}),
+		transport,
+		func() {
+			err := core.Sync()
+			require.NoError(t, err)
+		}
 }
 
 func newTestHub(t testing.TB) (*sentry.Hub, *sentrycore.TransportMock) {

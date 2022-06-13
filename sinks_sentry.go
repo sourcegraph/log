@@ -7,8 +7,14 @@ import (
 	"github.com/sourcegraph/log/internal/sinkcores/sentrycore"
 )
 
+// SentrySink reports all warning-level and above log messages that contain an error field
+// (via the `log.Error(err)` or `log.NamedError(name, err)` field constructors) to Sentry,
+// complete with stacktrace data and any additional context logged in the corresponding
+// log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	DSN     string
+	// DSN configures the Sentry reporting destination
+	DSN string
+
 	options sentry.ClientOptions
 }
 
@@ -18,13 +24,19 @@ type sentrySink struct {
 	core *sentrycore.Core
 }
 
+// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with default options.
 func NewSentrySink() Sink { return &sentrySink{} }
 
+// NewSentrySinkWithOptions instantiates a Sentry sink with advanced initial configuration
+// to provide to `log.Init`. Note that configuration, notably the Sentry DSN, may be
+// overwritten by subsequent calls to the `Update` callback from `log.Init`.
 func NewSentrySinkWithOptions(opts sentry.ClientOptions) Sink {
 	return &sentrySink{SentrySink: SentrySink{options: opts}}
 }
 
-func (s *sentrySink) Build() (zapcore.Core, error) {
+func (s *sentrySink) Name() string { return "SentrySink" }
+
+func (s *sentrySink) build() (zapcore.Core, error) {
 	opts := s.SentrySink.options
 	opts.Dsn = s.DSN
 	client, err := sentry.NewClient(opts)

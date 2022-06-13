@@ -34,7 +34,8 @@ type PostInitializationCallbacks struct {
 // It must be called on service startup, i.e. 'main()', NOT on an 'init()' function.
 // Subsequent calls will panic, so do not call this within a non-service context.
 //
-// Init returns a callback, sync, that should be called before application exit.
+// Init returns a set of callbacks - see PostInitializationCallbacks for more details.
+// The Sync callback in particular must be called before application exit.
 //
 // For testing, you can use 'logtest.Init' to initialize the logging library.
 //
@@ -48,9 +49,8 @@ func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
 	format := encoders.ParseOutputFormat(os.Getenv(envSrcLogFormat))
 	development := os.Getenv(envSrcDevelopment) == "true"
 
-	sinks := Sinks(s)
-	update := sinks.Update
-	cores, err := sinks.Build()
+	ss := sinks(s)
+	cores, err := ss.build()
 	sync := globallogger.Init(r, level, format, development, cores)
 
 	if err != nil {
@@ -60,6 +60,6 @@ func Init(r Resource, s ...Sink) *PostInitializationCallbacks {
 
 	return &PostInitializationCallbacks{
 		Sync:   sync,
-		Update: update,
+		Update: ss.update,
 	}
 }

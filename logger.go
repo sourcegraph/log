@@ -201,7 +201,8 @@ func (z *zapAdapter) IncreaseLevel(scope string, description string, level Level
 // WithCore is an internal API used to allow packages like logtest to hook into
 // underlying zap logger's core.
 //
-// It must implement logtest.configurableAdapter
+// It must implement internal/configurable.Logger. We do not assert it, however, because
+// that would cause an import cycle - instead, there is a test in package configurable.
 func (z *zapAdapter) WithCore(f func(c zapcore.Core) zapcore.Core) Logger {
 	newRootLogger := z.rootLogger.
 		WithOptions(zap.WrapCore(f))
