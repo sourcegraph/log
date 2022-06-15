@@ -32,6 +32,8 @@ var (
 
 	// Uint constructs a field with the given key and value.
 	Uint = zap.Uint
+	// Uint32 constructs a field with the given key and value.
+	Uint32 = zap.Uint32
 	// Uint64 constructs a field with the given key and value.
 	Uint64 = zap.Uint64
 
