@@ -7,6 +7,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/getsentry/sentry-go"
+	"github.com/sourcegraph/log/internal/encoders"
+	"github.com/sourcegraph/log/internal/globallogger"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -129,6 +131,14 @@ func (w *worker) capture(errCtx *errorContext) {
 	}
 	if errCtx.Level == zapcore.WarnLevel {
 		tags["transient"] = "true"
+	}
+	// Extract the service name, if present in the fields.
+	for _, f := range errCtx.Fields {
+		if f.Key == globallogger.ResourceFieldKey {
+			if r, ok := f.Interface.(*encoders.ResourceEncoder); ok {
+				tags["service_name"] = r.Name
+			}
+		}
 	}
 
 	// Add the logging context, extra is deprecated by Sentry:
