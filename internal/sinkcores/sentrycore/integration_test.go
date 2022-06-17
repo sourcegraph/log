@@ -107,6 +107,21 @@ func TestWith(t *testing.T) {
 	})
 }
 
+func TestWithTrace(t *testing.T) {
+	a := errors.New("A")
+	tc := log.TraceContext{
+		TraceID: "123",
+		SpanID:  "456",
+	}
+	logger, tr, sync := newTestLogger(t)
+	logger.WithTrace(tc).With(log.Error(a)).Warn("msg")
+	sync()
+	assert.Len(t, tr.Events(), 1)
+	attrs := tr.Events()[0].Contexts["log"].(map[string]interface{})
+	assert.Equal(t, "123", attrs["TraceId"])
+	assert.Equal(t, "456", attrs["SpanId"])
+}
+
 func TestFields(t *testing.T) {
 	assertEventLogCtx := func(t *testing.T, tr *sentrycore.TransportMock, cb func(map[string]interface{})) {
 		assert.Len(t, tr.Events(), 1)
