@@ -40,6 +40,7 @@ func (l Level) Parse() zapcore.Level {
 		// silences all output.
 		return zapcore.FatalLevel
 	}
-	// Quietly fall back to info
-	return zapcore.InfoLevel
+
+	// Quietly fall back to warn
+	return zapcore.WarnLevel
 }
