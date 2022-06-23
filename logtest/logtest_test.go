@@ -20,5 +20,5 @@ func TestExport(t *testing.T) {
 	assert.Equal(t, "hello world", logs[0].Message)
 
 	// In dev mode, attributes are not added
-	assert.Equal(t, map[string]any{"key": "value"}, logs[0].Fields)
+	assert.Equal(t, map[string]interface{}{"key": "value"}, logs[0].Fields)
 }
