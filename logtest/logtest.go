@@ -61,7 +61,7 @@ type CapturedLog struct {
 	Scope   string
 	Level   log.Level
 	Message string
-	Fields  map[string]any
+	Fields  map[string]interface{}
 }
 
 type LoggerOptions struct {
