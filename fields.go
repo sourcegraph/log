@@ -29,6 +29,8 @@ var (
 	Ints = zap.Ints
 	// Int32s constructs a field that carries a slice of 32 bit integers.
 	Int32s = zap.Int32s
+	// Int64s constructs a field that carries a slice of integers.
+	Int64s = zap.Int64s
 
 	// Uint constructs a field with the given key and value.
 	Uint = zap.Uint
@@ -37,12 +39,27 @@ var (
 	// Uint64 constructs a field with the given key and value.
 	Uint64 = zap.Uint64
 
+	// Float32 constructs a field that carries a float32. The way the
+	// floating-point value is represented is encoder-dependent, so marshaling is
+	// necessarily lazy.
+	Float32 = zap.Float32
+	// Float32s constructs a field that carries a slice of floats.
+	Float32s = zap.Float32s
 	// Float64 constructs a field that carries a float64. The way the floating-point value
 	// is represented is encoder-dependent, so marshaling is necessarily lazy.
 	Float64 = zap.Float64
+	// Float64s constructs a field that carries a slice of floats.
+	Float64s = zap.Float64s
 
 	// Bool constructs a field that carries a bool.
 	Bool = zap.Bool
+
+	// Binary constructs a field that carries an opaque binary blob.
+	//
+	// Binary data is serialized in an encoding-appropriate format. For example,
+	// zap's JSON encoder base64-encodes binary blobs. To log UTF-8 encoded text,
+	// use ByteString.
+	Binary = zap.Binary
 
 	// Duration constructs a field with the given key and value. The encoder controls how
 	// the duration is serialized.
