@@ -7,6 +7,8 @@ import (
 
 	"github.com/cockroachdb/errors"
 	"github.com/getsentry/sentry-go"
+	"github.com/sourcegraph/log/internal/encoders"
+	"github.com/sourcegraph/log/otfields"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -126,6 +128,16 @@ func (w *worker) capture(errCtx *errorContext) {
 		// If the error being reported panics in development, let's tag it
 		// so we can distinguish it from other levels and easily identify them
 		tags["panic_in_development"] = "true"
+	}
+
+	// Extract the service name, if present in the fields.
+	for _, f := range errCtx.Fields {
+		if f.Key == otfields.ResourceFieldKey {
+			if r, ok := f.Interface.(*encoders.ResourceEncoder); ok {
+				tags["resource.service.name"] = r.Name
+				tags["resource.service.version"] = r.Version
+			}
+		}
 	}
 
 	// Add the logging context, extra is deprecated by Sentry:
