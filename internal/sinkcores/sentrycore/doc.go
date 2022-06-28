@@ -1,9 +1,9 @@
 // sentrycore provides a Sentry sink, that captures errors passed to the logger with the log.Error
-// function if and only if the log level is superior or equal to Warn.
+// function if and only if the log level is superior or equal to Error.
 //
 // In order to not slow down logging when it's not necessary:
 //
-// a) the underlying zapcore.Core is only processing logging events on Warn and above levels.
+// a) the underlying zapcore.Core is only processing logging events on Error and above levels.
 //
 // b) consuming log events and processing them for sentry reporting are both asynchronous. This deflects
 // most of the work into the processing go routine and leverage Sentry's client ability to send reports in batches.

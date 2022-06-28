@@ -127,9 +127,6 @@ func (w *worker) capture(errCtx *errorContext) {
 		// so we can distinguish it from other levels and easily identify them
 		tags["panic_in_development"] = "true"
 	}
-	if errCtx.Level == zapcore.WarnLevel {
-		tags["transient"] = "true"
-	}
 
 	// Add the logging context, extra is deprecated by Sentry:
 	// https://docs.sentry.io/platforms/go/enriching-events/context/#additional-data

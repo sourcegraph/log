@@ -145,9 +145,9 @@ func (c *Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 	return nil
 }
 
-// Enabled returns false when the log level is below the Warn level.
+// Enabled returns false when the log level is below the Error level.
 func (c *Core) Enabled(level zapcore.Level) bool {
-	return level >= zapcore.WarnLevel
+	return level >= zapcore.ErrorLevel
 }
 
 // Sync ensure that the remaining event are flushed, but has a hard limit of TODO seconds
