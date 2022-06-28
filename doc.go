@@ -6,5 +6,5 @@
 // available, disallowing the use of compile-time loggers, and re-exporting a limited
 // number of field types.
 //
-// Learn more: https://docs.sourcegraph.com/dev/how-to/add_logging#testing-usage
+// Learn more: https://docs.sourcegraph.com/dev/how-to/add_logging
 package log

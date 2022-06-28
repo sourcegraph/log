@@ -2,6 +2,7 @@ package logtest
 
 import (
 	"flag"
+	"sync"
 	"testing"
 	"time"
 
@@ -16,6 +17,9 @@ import (
 	"github.com/sourcegraph/log/otfields"
 )
 
+// stdTestInit guards the initialization of the standard library testing package.
+var stdTestInit sync.Once
+
 // Init can be used to instantiate the log package for running tests, to be called in
 // TestMain for the relevant package. Remember to call (*testing.M).Run() after initializing
 // the logger!
@@ -23,9 +27,12 @@ import (
 // testing.M is an unused argument, used to indicate this function should be called in
 // TestMain.
 func Init(_ *testing.M) {
-	// ensure Verbose is set up
-	testing.Init()
-	flag.Parse()
+	stdTestInit.Do(func() {
+		// ensure Verbose and standard library testing stuff is set up
+		testing.Init()
+		flag.Parse()
+	})
+
 	// set reasonable defaults
 	if testing.Verbose() {
 		initGlobal(zapcore.DebugLevel)
@@ -54,7 +61,7 @@ type CapturedLog struct {
 	Scope   string
 	Level   log.Level
 	Message string
-	Fields  map[string]any
+	Fields  map[string]interface{}
 }
 
 type LoggerOptions struct {

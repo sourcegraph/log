@@ -129,9 +129,7 @@ func (w *worker) capture(errCtx *errorContext) {
 		// so we can distinguish it from other levels and easily identify them
 		tags["panic_in_development"] = "true"
 	}
-	if errCtx.Level == zapcore.WarnLevel {
-		tags["transient"] = "true"
-	}
+
 	// Extract the service name, if present in the fields.
 	for _, f := range errCtx.Fields {
 		if f.Key == otfields.ResourceFieldKey {

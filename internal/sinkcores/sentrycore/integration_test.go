@@ -29,7 +29,7 @@ func TestLevelFiltering(t *testing.T) {
 	}{
 		{level: zapcore.DebugLevel, wantReport: false},
 		{level: zapcore.InfoLevel, wantReport: false},
-		{level: zapcore.WarnLevel, wantReport: true},
+		{level: zapcore.WarnLevel, wantReport: false},
 		{level: zapcore.ErrorLevel, wantReport: true},
 		// Levels that exit are annoying to test, it would required to fire up a subprocess, so
 		// instead, we just check the result of the Enabled() method in another subtest.
@@ -89,21 +89,13 @@ func TestTags(t *testing.T) {
 		assert.Equal(t, tr.Events()[0].Tags["scope"], "TestTags/scope.my-scope")
 	})
 
-	t.Run("transient", func(t *testing.T) {
-		logger, tr, sync := newTestLogger(t)
-		logger.Warn("msg", log.Error(e))
-		sync()
-		assert.Len(t, tr.Events(), 1)
-		assert.Equal(t, tr.Events()[0].Tags["transient"], "true")
-	})
-
 	t.Run("service_name", func(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		resource := log.Resource{
 			Name:    "foobar",
 			Version: "123",
 		}
-		logger.Warn("msg", log.Error(e), zap.Object(otfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: resource}))
+		logger.Error("msg", log.Error(e), zap.Object(otfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: resource}))
 		sync()
 		assert.Len(t, tr.Events(), 1)
 		assert.Equal(t, tr.Events()[0].Tags["resource.service.name"], "foobar")
@@ -117,10 +109,25 @@ func TestWith(t *testing.T) {
 	c := errors.New("C")
 	t.Run("multiple errors", func(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
-		logger.With(log.Error(a), log.Error(b)).Warn("msg", log.Error(c))
+		logger.With(log.Error(a), log.Error(b)).Error("msg", log.Error(c))
 		sync()
 		assert.Len(t, tr.Events(), 3)
 	})
+}
+
+func TestWithTrace(t *testing.T) {
+	a := errors.New("A")
+	tc := log.TraceContext{
+		TraceID: "123",
+		SpanID:  "456",
+	}
+	logger, tr, sync := newTestLogger(t)
+	logger.WithTrace(tc).With(log.Error(a)).Error("msg")
+	sync()
+	assert.Len(t, tr.Events(), 1)
+	attrs := tr.Events()[0].Contexts["log"].(map[string]interface{})
+	assert.Equal(t, "123", attrs["TraceId"])
+	assert.Equal(t, "456", attrs["SpanId"])
 }
 
 func TestFields(t *testing.T) {
@@ -207,7 +214,7 @@ func TestConcurrentLogging(t *testing.T) {
 		wg.Add(10)
 		f := func() {
 			for i := 0; i < 10; i++ {
-				logger.With(log.Error(e)).Warn("msg")
+				logger.With(log.Error(e)).Error("msg")
 			}
 			wg.Done()
 		}

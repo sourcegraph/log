@@ -22,8 +22,11 @@ type Logger interface {
 	// scope. For example, if the underlying logger is scoped 'foo', then
 	// 'logger.Scoped("bar")' will create a logger with scope 'foo.bar'.
 	//
-	// Scopes should be static values, NOT dynamic values like identifiers or parameters.
+	// Scopes should be static values, NOT dynamic values like identifiers or parameters,
+	// and should generally be CamelCased with descriptions that follow our logging
+	// conventions - learn more: https://docs.sourcegraph.com/dev/how-to/add_logging#scoped-loggers
 	//
+	// Scopes map to OpenTelemetry InstrumentationScopes:
 	// https://opentelemetry.io/docs/reference/specification/logs/data-model/#field-instrumentationscope
 	Scoped(scope string, description string) Logger
 
@@ -73,7 +76,12 @@ type Logger interface {
 // compliant implementation. Instead of using this everywhere a log is needed, callers
 // should hold a reference to the Logger and pass it in to places that need to log.
 //
-// Scopes should be static values, NOT dynamic values like identifiers or parameters.
+// Scopes should be static values, NOT dynamic values like identifiers or parameters,
+// and should generally be CamelCased with descriptions that follow our logging
+// conventions - learn more: https://docs.sourcegraph.com/dev/how-to/add_logging#scoped-loggers
+//
+// When testing, you should use 'logtest.Scoped(*testing.T)' instead - learn more:
+// https://docs.sourcegraph.com/dev/how-to/add_logging#testing-usage
 func Scoped(scope string, description string) Logger {
 	devMode := globallogger.DevMode()
 	safeGet := !devMode // do not panic in prod
