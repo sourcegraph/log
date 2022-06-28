@@ -2,6 +2,11 @@ package otfields
 
 import "go.uber.org/zap"
 
+const (
+	// ResourceFieldKey is the key used to identify Resource in stores.
+	ResourceFieldKey = "Resource"
+)
+
 // Resource represents a service instance.
 //
 // https://opentelemetry.io/docs/reference/specification/Resource/semantic_conventions/#service

@@ -8,7 +8,7 @@ import (
 	"github.com/cockroachdb/errors"
 	"github.com/getsentry/sentry-go"
 	"github.com/sourcegraph/log/internal/encoders"
-	"github.com/sourcegraph/log/internal/globallogger"
+	"github.com/sourcegraph/log/otfields"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -134,7 +134,7 @@ func (w *worker) capture(errCtx *errorContext) {
 	}
 	// Extract the service name, if present in the fields.
 	for _, f := range errCtx.Fields {
-		if f.Key == globallogger.ResourceFieldKey {
+		if f.Key == otfields.ResourceFieldKey {
 			if r, ok := f.Interface.(*encoders.ResourceEncoder); ok {
 				tags["resource.service.name"] = r.Name
 				tags["resource.service.version"] = r.Version

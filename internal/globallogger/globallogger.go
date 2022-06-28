@@ -18,10 +18,6 @@ var (
 	globalLoggerInit sync.Once
 )
 
-const (
-	ResourceFieldKey = "Resource"
-)
-
 func DevMode() bool { return devMode }
 
 // Get retrieves the initialized global logger, or panics otherwise (unless safe is true,
@@ -85,7 +81,7 @@ func initLogger(r otfields.Resource, level zapcore.LevelEnabler, format encoders
 	if r.InstanceID == "" {
 		r.InstanceID = uuid.New().String()
 	}
-	return logger.With(zap.Object(ResourceFieldKey, &encoders.ResourceEncoder{Resource: r}))
+	return logger.With(zap.Object(otfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: r}))
 }
 
 // copied from https://sourcegraph.com/github.com/uber-go/zap/-/blob/config.go?L249
