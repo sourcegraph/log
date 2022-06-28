@@ -100,12 +100,14 @@ func TestTags(t *testing.T) {
 	t.Run("service_name", func(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		resource := log.Resource{
-			Name: "foobar",
+			Name:    "foobar",
+			Version: "123",
 		}
 		logger.Warn("msg", log.Error(e), zap.Object(globallogger.ResourceFieldKey, &encoders.ResourceEncoder{Resource: resource}))
 		sync()
 		assert.Len(t, tr.Events(), 1)
-		assert.Equal(t, tr.Events()[0].Tags["service_name"], "foobar")
+		assert.Equal(t, tr.Events()[0].Tags["resource.service.name"], "foobar")
+		assert.Equal(t, tr.Events()[0].Tags["resource.service.version"], "123")
 	})
 }
 

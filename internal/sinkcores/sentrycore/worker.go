@@ -136,7 +136,8 @@ func (w *worker) capture(errCtx *errorContext) {
 	for _, f := range errCtx.Fields {
 		if f.Key == globallogger.ResourceFieldKey {
 			if r, ok := f.Interface.(*encoders.ResourceEncoder); ok {
-				tags["service_name"] = r.Name
+				tags["resource.service.name"] = r.Name
+				tags["resource.service.version"] = r.Version
 			}
 		}
 	}
