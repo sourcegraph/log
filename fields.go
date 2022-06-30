@@ -1,8 +1,6 @@
 package log
 
 import (
-	"time"
-
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -105,7 +103,7 @@ func NamedError(key string, err error) Field {
 
 // ptrValueTypes lists all acceptable pointer types for creating fields.
 type ptrValueTypes interface {
-	~string | ~int | ~int32 | ~int64 | ~uint | ~uint32 | ~uint64 | ~float32 | ~float64 | ~bool | time.Time
+	~string | ~int | ~int32 | ~int64 | ~uint | ~uint32 | ~uint64 | ~float32 | ~float64 | ~bool
 }
 
 // Ptr safely dereferences a value for use in a log field, rendering a zero value if the

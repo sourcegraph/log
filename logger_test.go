@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 
@@ -75,16 +76,21 @@ func TestLoggerPtrFie(t *testing.T) {
 
 	str := "foo"
 	strPtr := &str
-	var nilStrPtr *string
+	var (
+		nilStrPtr   *string
+		durationPtr *time.Duration
+	)
 
 	logger.Info("ptr",
 		log.String("str", log.Ptr(strPtr)),
-		log.String("nilptr", log.Ptr(nilStrPtr)))
+		log.String("nilptr", log.Ptr(nilStrPtr)),
+		log.Duration("durptr", log.Ptr(durationPtr)))
 
 	logs := exportLogs()
 
 	assert.Equal(t, map[string]interface{}{
 		"str":    str,
 		"nilptr": "",
+		"durptr": time.Duration(0),
 	}, logs[0].Fields["Attributes"])
 }
