@@ -101,6 +101,8 @@ type ptrFieldsTypes interface {
 	*string | *int | *int32 | *int64 | *uint | *uint32 | *uint64 | *float32 | *float64 | *bool | *time.Time | *time.Duration
 }
 
+// Ptr creates a field whose value is a pointer to a type that is supported by other fields functions from this package and
+// safely and explicitly represent `nil` when appropriate.
 func Ptr[T ptrFieldsTypes](key string, value T) Field {
 	return zap.Any(key, value)
 }
