@@ -18,9 +18,6 @@ type Field = zapcore.Field
 var (
 	// String constructs a field with the given key and value.
 	String = zap.String
-	// String constructs a field with the given key and value. The returned field will
-	// safely and explictly represent `nil` when appropriate.
-	StringPtr = zap.Stringp
 	// Strings constructs a field that carries a slice of strings.
 	Strings = zap.Strings
 
