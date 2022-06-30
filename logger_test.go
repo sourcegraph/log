@@ -77,15 +77,14 @@ func TestLoggerPtrFie(t *testing.T) {
 	strPtr := &str
 	var nilStrPtr *string
 
-	logger.Info("ptr", log.Ptr("str", strPtr), log.Ptr("nilptr", nilStrPtr))
-
-	// This doesn't compile, meaning the implementation is correct.
-	// logger.Info("ptr", log.Ptr("str", nil))
+	logger.Info("ptr",
+		log.String("str", log.Ptr(strPtr)),
+		log.String("nilptr", log.Ptr(nilStrPtr)))
 
 	logs := exportLogs()
 
 	assert.Equal(t, map[string]interface{}{
 		"str":    str,
-		"nilptr": nil,
+		"nilptr": "",
 	}, logs[0].Fields["Attributes"])
 }

@@ -90,20 +90,6 @@ func Error(err error) Field {
 	return NamedError("error", err)
 }
 
-// ptrFieldsTypes lists all acceptable pointer types for creating fields.
-//
-// Caveat: we can't use ~type because the type assertion switch in zap.Any will fail with a
-// custom type.
-type ptrFieldsTypes interface {
-	*string | *int | *int32 | *int64 | *uint | *uint32 | *uint64 | *float32 | *float64 | *bool | *time.Time | *time.Duration
-}
-
-// Ptr creates a field whose value is a pointer to a type that is supported by other fields functions from this package and
-// safely and explicitly represent `nil` when appropriate.
-func Ptr[T ptrFieldsTypes](key string, value T) Field {
-	return zap.Any(key, value)
-}
-
 // NamedError constructs a field that logs err.Error() under the provided key.
 //
 // For the common case in which the key is simply "error", the Error function is shorter and less repetitive.
@@ -115,4 +101,23 @@ func NamedError(key string, err error) Field {
 		return String(key, "<nil>")
 	}
 	return zap.NamedError(key, &encoders.ErrorEncoder{Source: err})
+}
+
+// ptrValueTypes lists all acceptable pointer types for creating fields.
+type ptrValueTypes interface {
+	~string | ~int | ~int32 | ~int64 | ~uint | ~uint32 | ~uint64 | ~float32 | ~float64 | ~bool | time.Time
+}
+
+// Ptr safely dereferences a value for use in a log field, rendering a zero value if the
+// value is nil. For example:
+//
+//   var value *string
+//   log.String("key", log.Ptr(value)) // {"key":"key","value":""}
+//
+func Ptr[T ptrValueTypes](value *T) T {
+	if value == nil {
+		var zero T
+		return zero
+	}
+	return *value
 }
