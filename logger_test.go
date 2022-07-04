@@ -65,27 +65,3 @@ func TestLogger(t *testing.T) {
 		},
 	}, logs[4].Fields["Attributes"])
 }
-
-func TestLoggerPtrFie(t *testing.T) {
-	logger, exportLogs := logtest.Captured(t)
-	assert.NotNil(t, logger)
-	if globallogger.DevMode() {
-		logger = logger.With(otfields.AttributesNamespace)
-	}
-
-	str := "foo"
-	strPtr := &str
-	var nilStrPtr *string
-
-	logger.Info("ptr", log.Ptr("str", strPtr), log.Ptr("nilptr", nilStrPtr))
-
-	// This doesn't compile, meaning the implementation is correct.
-	// logger.Info("ptr", log.Ptr("str", nil))
-
-	logs := exportLogs()
-
-	assert.Equal(t, map[string]interface{}{
-		"str":    str,
-		"nilptr": nil,
-	}, logs[0].Fields["Attributes"])
-}

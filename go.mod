@@ -1,6 +1,6 @@
 module github.com/sourcegraph/log
 
-go 1.18
+go 1.17
 
 require (
 	github.com/cockroachdb/errors v1.9.0
