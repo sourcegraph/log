@@ -13,6 +13,8 @@ import (
 
 type outputSink struct {
 	development bool
+
+	core *outputcore.ConfigurableCore
 }
 
 func (s *outputSink) Name() string { return "OutputSink" }
@@ -29,9 +31,15 @@ func (s *outputSink) build() (zapcore.Core, error) {
 	if s.development {
 		return outputcore.NewDevelopmentCore(output, level, format), nil
 	}
-	return outputcore.NewCore(output, level, format), nil
+
+	s.core = outputcore.NewCore(output, level, format)
+	return s.core, nil
 }
 
 func (s *outputSink) update(updated SinksConfig) error {
+	if s.core == nil {
+		return nil // not configurable
+	}
+	s.core.Configure(outputcore.Options{}) // TODO
 	return nil
 }
