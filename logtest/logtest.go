@@ -14,6 +14,8 @@ import (
 	"github.com/sourcegraph/log/internal/configurable"
 	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/globallogger"
+	"github.com/sourcegraph/log/internal/sinkcores/outputcore"
+	"github.com/sourcegraph/log/internal/stderr"
 	"github.com/sourcegraph/log/otfields"
 )
 
@@ -52,8 +54,14 @@ func InitWithLevel(_ *testing.M, level log.Level) {
 }
 
 func initGlobal(level zapcore.Level) {
+	// send output from package-scope loggers to stderr (we can't write to testing here)
+	output, err := stderr.Open()
+	if err != nil {
+		panic(err)
+	}
+	core := outputcore.NewDevelopmentCore(output, level, encoders.OutputConsole)
 	// use an empty resource, we don't log output Resource in dev mode anyway
-	globallogger.Init(otfields.Resource{}, level, encoders.OutputConsole, true, nil)
+	globallogger.Init(otfields.Resource{}, true, []zapcore.Core{core})
 }
 
 type CapturedLog struct {
@@ -90,8 +98,8 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 		if options.Level != "" {
 			level = zap.NewAtomicLevelAt(options.Level.Parse())
 		}
-
-		return newTestingCore(t, level, options.FailOnErrorLogs) // replace the core entirely
+		// replace the core entirely
+		return newTestingCore(t, level, options.FailOnErrorLogs)
 	})
 }
 
