@@ -3,9 +3,6 @@ package log
 import (
 	"os"
 
-	"go.uber.org/zap"
-
-	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/otfields"
 )
@@ -51,15 +48,13 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 		panic("log.Init initialized multiple times")
 	}
 
-	level := zap.NewAtomicLevelAt(Level(os.Getenv(EnvLogLevel)).Parse())
-	format := encoders.ParseOutputFormat(os.Getenv(EnvLogFormat))
 	development := os.Getenv(EnvDevelopment) == "true"
 
-	ss := sinks(s)
+	ss := sinks(append([]Sink{&outputSink{development: development}}, s...))
 	cores, sinksBuildErr := ss.build()
 
 	// Init the logger first, so that we can log the error if needed
-	sync := globallogger.Init(r, level, format, development, cores)
+	sync := globallogger.Init(r, development, cores)
 
 	if sinksBuildErr != nil {
 		// Log the error

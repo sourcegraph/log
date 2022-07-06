@@ -35,9 +35,9 @@ func Get(safe bool) *zap.Logger {
 
 // Init initializes the global logger once. Subsequent calls are no-op. Returns the
 // callback to sync the root core.
-func Init(r otfields.Resource, level zapcore.LevelEnabler, format encoders.OutputFormat, development bool, sinks []zapcore.Core) func() error {
+func Init(r otfields.Resource, development bool, sinks []zapcore.Core) func() error {
 	globalLoggerInit.Do(func() {
-		globalLogger = initLogger(r, level, format, development, sinks)
+		globalLogger = initLogger(r, development, sinks)
 	})
 	return globalLogger.Sync
 }
@@ -47,28 +47,22 @@ func IsInitialized() bool {
 	return globalLogger != nil
 }
 
-func initLogger(r otfields.Resource, level zapcore.LevelEnabler, format encoders.OutputFormat, development bool, sinks []zapcore.Core) *zap.Logger {
+func initLogger(r otfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
 	// Set global
 	devMode = development
 
-	logSink, errSink, err := openStderrSinks()
+	internalErrsSink, err := openStderr()
 	if err != nil {
 		panic(err.Error())
 	}
 
-	options := []zap.Option{zap.ErrorOutput(errSink), zap.AddCaller()}
+	options := []zap.Option{zap.ErrorOutput(internalErrsSink), zap.AddCaller()}
 	if development {
 		options = append(options, zap.Development())
 	}
 
-	c := zapcore.NewCore(
-		encoders.BuildEncoder(format, development),
-		logSink,
-		level,
-	)
-
-	c = zapcore.NewTee(append([]zapcore.Core{c}, sinks...)...)
-	logger := zap.New(c, options...)
+	core := zapcore.NewTee(sinks...)
+	logger := zap.New(core, options...)
 
 	if development {
 		return logger
@@ -84,16 +78,10 @@ func initLogger(r otfields.Resource, level zapcore.LevelEnabler, format encoders
 	return logger.With(zap.Object(otfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: r}))
 }
 
-// copied from https://sourcegraph.com/github.com/uber-go/zap/-/blob/config.go?L249
-func openStderrSinks() (zapcore.WriteSyncer, zapcore.WriteSyncer, error) {
-	sink, closeOut, err := zap.Open("stderr")
-	if err != nil {
-		return nil, nil, err
-	}
+func openStderr() (zapcore.WriteSyncer, error) {
 	errSink, _, err := zap.Open("stderr")
 	if err != nil {
-		closeOut()
-		return nil, nil, err
+		return nil, err
 	}
-	return sink, errSink, nil
+	return errSink, nil
 }
