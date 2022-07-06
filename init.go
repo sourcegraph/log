@@ -17,6 +17,17 @@ const (
 	// EnvLogLevel is key of the environment variable that can be used to set the log
 	// level on Init.
 	EnvLogLevel = "SRC_LOG_LEVEL"
+	// EnvLogSamplingInitial is key of the environment variable that can be used to set
+	// the number of entries with identical messages to always output per second.
+	//
+	// Defaults to 100 - set explicitly to 0 or -1 to disable.
+	EnvLogSamplingInitial = "SRC_LOG_SAMPLING_INITIAL"
+	// EnvLogSamplingThereafter is key of the environment variable that can be used to set
+	// the number of entries with identical messages to discard before emitting another
+	// one per second, after EnvLogSamplingInitial.
+	//
+	// Defaults to 100 - set explicitly to 0 or -1 to disable.
+	EnvLogSamplingThereafter = "SRC_LOG_SAMPLING_THEREAFTER"
 )
 
 type Resource = otfields.Resource

@@ -3,23 +3,7 @@ package logtest
 import (
 	"bytes"
 	"testing"
-
-	"github.com/sourcegraph/log/internal/encoders"
-	"go.uber.org/zap/zapcore"
 )
-
-// newTestingCore creates a core with the same encoder as our usual logging, but writes to
-// testing.TB instead.
-func newTestingCore(t testing.TB, level zapcore.LevelEnabler, failOnErrorLogs bool) zapcore.Core {
-	return zapcore.NewCore(
-		encoders.BuildEncoder(encoders.OutputConsole, true),
-		&testingWriter{
-			t:          t,
-			markFailed: failOnErrorLogs,
-		},
-		level,
-	)
-}
 
 // testingWriter is a WriteSyncer that writes to the given testing.TB.
 //
