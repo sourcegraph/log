@@ -8,7 +8,7 @@ var DefaultSentryClientOptions = sentry.ClientOptions{
 	SampleRate: 0.1,
 }
 
-// ApplySentryClientDefaultOptions merges ops with the defaults defined in DefaultSentryClientOptions.
+// ApplySentryClientDefaultOptions merges opts with the defaults defined in DefaultSentryClientOptions.
 func ApplySentryClientDefaultOptions(opts sentry.ClientOptions) sentry.ClientOptions {
 	if opts.SampleRate == 0 {
 		opts.SampleRate = DefaultSentryClientOptions.SampleRate
