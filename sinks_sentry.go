@@ -25,13 +25,19 @@ type sentrySink struct {
 }
 
 // NewSentrySink instantiates a Sentry sink to provide to `log.Init` with default options.
-func NewSentrySink() Sink { return &sentrySink{} }
+//
+// See sentrycore.DefaultSentryClientOptions for the default options.
+func NewSentrySink() Sink {
+	return &sentrySink{SentrySink: SentrySink{options: sentrycore.DefaultSentryClientOptions}}
+}
 
 // NewSentrySinkWithOptions instantiates a Sentry sink with advanced initial configuration
 // to provide to `log.Init`. Note that configuration, notably the Sentry DSN, may be
 // overwritten by subsequent calls to the `Update` callback from `log.Init`.
+//
+// See sentrycore.DefaultSentryClientOptions for the default options.
 func NewSentrySinkWithOptions(opts sentry.ClientOptions) Sink {
-	return &sentrySink{SentrySink: SentrySink{options: opts}}
+	return &sentrySink{SentrySink: SentrySink{options: sentrycore.ApplySentryClientDefaultOptions(opts)}}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
