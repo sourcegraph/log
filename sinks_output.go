@@ -1,7 +1,9 @@
 package log
 
 import (
+	"fmt"
 	"os"
+	"strconv"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -29,9 +31,37 @@ func (s *outputSink) build() (zapcore.Core, error) {
 	if s.development {
 		return outputcore.NewDevelopmentCore(output, level, format), nil
 	}
-	return outputcore.NewCore(output, level, format), nil
+
+	sampling, err := parseSamplingConfig()
+	if err != nil {
+		return nil, err
+	}
+	return outputcore.NewCore(output, level, format, sampling), nil
 }
 
-func (s *outputSink) update(updated SinksConfig) error {
-	return nil
+// update is a no-op because outputSink cannot be changed live.
+func (s *outputSink) update(updated SinksConfig) error { return nil }
+
+func parseSamplingConfig() (config zap.SamplingConfig, err error) {
+	if val, set := os.LookupEnv(EnvLogSamplingInitial); set {
+		config.Initial, err = strconv.Atoi(val)
+		if err != nil {
+			err = fmt.Errorf("SRC_LOG_SAMPLING_INITIAL is invalid: %w", err)
+			return
+		}
+	} else {
+		config.Initial = 100
+	}
+
+	if val, set := os.LookupEnv(EnvLogSamplingInitial); set {
+		config.Thereafter, err = strconv.Atoi(val)
+		if err != nil {
+			err = fmt.Errorf("SRC_LOG_SAMPLING_THEREAFTER is invalid: %w", err)
+			return
+		}
+	} else {
+		config.Thereafter = 100
+	}
+
+	return
 }

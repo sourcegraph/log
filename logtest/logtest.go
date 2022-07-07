@@ -98,8 +98,12 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 		if options.Level != "" {
 			level = zap.NewAtomicLevelAt(options.Level.Parse())
 		}
+
 		// replace the core entirely
-		return newTestingCore(t, level, options.FailOnErrorLogs)
+		return outputcore.NewDevelopmentCore(&testingWriter{
+			t:          t,
+			markFailed: options.FailOnErrorLogs,
+		}, level, encoders.OutputConsole)
 	})
 }
 
