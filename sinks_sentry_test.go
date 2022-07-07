@@ -25,6 +25,7 @@ func TestNewSentrySinkWithOptions(t *testing.T) {
 		assert.True(t, ok)
 		assert.Equal(t, 0.5, ss.SentrySink.options.SampleRate)
 	})
+
 	t.Run("defaults are merged", func(t *testing.T) {
 		s := NewSentrySinkWithOptions(sentry.ClientOptions{ServerName: "foobar"})
 		ss, ok := s.(*sentrySink)
