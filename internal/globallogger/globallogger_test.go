@@ -13,5 +13,7 @@ func TestGet(t *testing.T) {
 	assert.Panics(t, func() { Get(false) })
 
 	// Uninitialized safe Get should not panic
-	assert.NotNil(t, Get(true))
+	l, ok := Get(true)
+	assert.False(t, ok)
+	assert.NotNil(t, l)
 }

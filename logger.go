@@ -84,7 +84,27 @@ type Logger interface {
 // https://docs.sourcegraph.com/dev/how-to/add_logging#testing-usage
 func Scoped(scope string, description string) Logger {
 	safeGet := !globallogger.DevMode() // do not panic in prod
-	root := globallogger.Get(safeGet)
+	logger, _ := scoped(scope, description, safeGet)
+	return logger
+}
+
+// SafeScoped safely returns the global logger and sets it up with the given scope and
+// OpenTelemetry compliant implementation. This means that if the Scoped call happens
+// before log.Init, a no-op logger will be returned, along with 'false'.
+//
+// Callers of SafeScoped SHOULD continuously attempt to reconstruct the logger with
+// SafeScoped until a valid logger is returned after log.Init, in order to ensure logs
+// eventually get written.
+//
+// This is useful using loggers in scenarios that are not easy to disentable from package
+// initialization - a safe logger can be created at first, and subsequent usages can
+// check for a valid logger until one is available.
+func SafeScoped(scope string, description string) (logger Logger, valid bool) {
+	return scoped(scope, description, true)
+}
+
+func scoped(scope string, description string, safe bool) (logger Logger, valid bool) {
+	root, valid := globallogger.Get(safe)
 	adapted := &zapAdapter{
 		Logger:            root,
 		rootLogger:        root,
@@ -94,9 +114,9 @@ func Scoped(scope string, description string) Logger {
 	if globallogger.DevMode() {
 		// In development, don't add the OpenTelemetry "Attributes" namespace which gets
 		// rather difficult to read.
-		return adapted.Scoped(scope, description)
+		return adapted.Scoped(scope, description), valid
 	}
-	return adapted.Scoped(scope, description).With(otfields.AttributesNamespace)
+	return adapted.Scoped(scope, description).With(otfields.AttributesNamespace), valid
 }
 
 type zapAdapter struct {
@@ -143,7 +163,7 @@ func (z *zapAdapter) Scoped(scope string, description string) Logger {
 		if _, alreadyLogged := createdScopes.LoadOrStore(newFullScope, struct{}{}); !alreadyLogged {
 			callerSkip := 1 // Logger.Scoped() -> Logger.Debug()
 			if z.fromPackageScoped {
-				callerSkip += 1 // log.Scoped() -> Logger.Scoped() -> Logger.Debug()
+				callerSkip += 2 // log.Scoped() -> log.scoped() -> Logger.Scoped() -> Logger.Debug()
 			}
 			scopedLogger.
 				AddCallerSkip(callerSkip).
