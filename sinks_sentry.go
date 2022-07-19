@@ -44,7 +44,14 @@ func (s *sentrySink) Name() string { return "SentrySink" }
 
 func (s *sentrySink) build() (zapcore.Core, error) {
 	opts := s.SentrySink.options
-	opts.Dsn = s.DSN
+
+	// only set the dsn when it is not defined in opts
+	if opts.Dsn != "" {
+		opts.Dsn = s.DSN
+	} else {
+		// update the SentrySink DSN so that it is aligned with the options dsn
+		s.DSN = opts.Dsn
+	}
 	client, err := sentry.NewClient(opts)
 	if err != nil {
 		return nil, err
@@ -59,6 +66,7 @@ func (s *sentrySink) update(updated SinksConfig) error {
 		updatedDSN = updated.Sentry.DSN
 	}
 
+	// no change: current sentry dsn and updated dsn are the same
 	if s.DSN == updatedDSN {
 		return nil
 	}
