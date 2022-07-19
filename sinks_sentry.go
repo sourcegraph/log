@@ -12,9 +12,6 @@ import (
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	// DSN configures the Sentry reporting destination
-	DSN string
-
 	options sentry.ClientOptions
 }
 
@@ -45,13 +42,6 @@ func (s *sentrySink) Name() string { return "SentrySink" }
 func (s *sentrySink) build() (zapcore.Core, error) {
 	opts := s.SentrySink.options
 
-	// only set the dsn when it is not defined in opts
-	if opts.Dsn != "" {
-		opts.Dsn = s.DSN
-	} else {
-		// update the SentrySink DSN so that it is aligned with the options dsn
-		s.DSN = opts.Dsn
-	}
 	client, err := sentry.NewClient(opts)
 	if err != nil {
 		return nil, err
@@ -63,11 +53,11 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 func (s *sentrySink) update(updated SinksConfig) error {
 	var updatedDSN string
 	if updated.Sentry != nil {
-		updatedDSN = updated.Sentry.DSN
+		updatedDSN = updated.Sentry.options.Dsn
 	}
 
 	// no change: current sentry dsn and updated dsn are the same
-	if s.DSN == updatedDSN {
+	if s.options.Dsn == updatedDSN {
 		return nil
 	}
 
