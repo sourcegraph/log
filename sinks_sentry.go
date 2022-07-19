@@ -12,7 +12,8 @@ import (
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	// DSN configures the Sentry reporting destination
+	// DSN configures the Sentry reporting destination.
+	// This value is set by Sourcegraph.com when it reads the DSN from config.
 	DSN string
 
 	options sentry.ClientOptions
@@ -46,7 +47,7 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 	opts := s.SentrySink.options
 
 	// only set the dsn when it is not defined in opts
-	if opts.Dsn != "" {
+	if opts.Dsn == "" {
 		opts.Dsn = s.DSN
 	} else {
 		// update the SentrySink DSN so that it is aligned with the options dsn
