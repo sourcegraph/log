@@ -64,7 +64,7 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 func (s *sentrySink) update(updated SinksConfig) error {
 	var updatedDSN string
 	if updated.Sentry != nil {
-		updatedDSN = updated.Sentry.options.Dsn
+		updatedDSN = updated.Sentry.DSN
 	}
 
 	// no change: current sentry dsn and updated dsn are the same
