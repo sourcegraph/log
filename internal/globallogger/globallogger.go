@@ -24,15 +24,15 @@ func DevMode() bool { return devMode }
 
 // Get retrieves the initialized global logger, or panics otherwise (unless safe is true,
 // in which case a no-op logger is returned)
-func Get(safe bool) *zap.Logger {
+func Get(safe bool) (logger *zap.Logger, valid bool) {
 	if !IsInitialized() {
 		if safe {
-			return zap.NewNop()
+			return zap.NewNop(), false
 		} else {
 			panic("global logger not initialized - have you called log.Init or logtest.Init?")
 		}
 	}
-	return globalLogger
+	return globalLogger, true
 }
 
 // Init initializes the global logger once. Subsequent calls are no-op. Returns the
