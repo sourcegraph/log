@@ -12,7 +12,9 @@ import (
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	DSN     string
+	// DSN configures the Sentry reporting destination
+	DSN string
+
 	options sentry.ClientOptions
 }
 
