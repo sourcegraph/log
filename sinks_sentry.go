@@ -12,10 +12,16 @@ import (
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	// DSN configures the Sentry reporting destination
+	// DSN configures the Sentry reporting destination.
 	DSN string
-
-	options sentry.ClientOptions
+	// The sample rate for event submission in the range [0.0, 1.0]. By default,
+	// all events are sent. Thus, as a historical special case, the sample rate
+	// 0.0 is treated as if it was 1.0. To drop all events, set the DSN to the
+	// empty string.
+	SampleRate float64
+	// In debug mode, the debug information is printed to stdout to help you
+	// understand what sentry is doing.
+	Debug bool
 }
 
 type sentrySink struct {
@@ -24,28 +30,22 @@ type sentrySink struct {
 	core *sentrycore.Core
 }
 
-// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with default options.
-//
-// See sentrycore.DefaultSentryClientOptions for the default options.
+// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with the following default values:
+// - SampleRate: 0.1
+// To provide different values see `NewSentrySinkWith`
 func NewSentrySink() Sink {
-	return &sentrySink{SentrySink: SentrySink{options: sentrycore.DefaultSentryClientOptions}}
+	return &sentrySink{SentrySink: SentrySink{SampleRate: 0.1}}
 }
 
-// NewSentrySinkWithOptions instantiates a Sentry sink with advanced initial configuration
-// to provide to `log.Init`. Note that configuration, notably the Sentry DSN, may be
-// overwritten by subsequent calls to the `Update` callback from `log.Init`.
-//
-// See sentrycore.DefaultSentryClientOptions for the default options.
-func NewSentrySinkWithOptions(opts sentry.ClientOptions) Sink {
-	return &sentrySink{SentrySink: SentrySink{options: sentrycore.ApplySentryClientDefaultOptions(opts)}}
+// NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink
+func NewSentrySinkWith(s SentrySink) Sink {
+	return &sentrySink{SentrySink: s}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
 
 func (s *sentrySink) build() (zapcore.Core, error) {
-	opts := s.SentrySink.options
-	opts.Dsn = s.DSN
-	client, err := sentry.NewClient(opts)
+	client, err := sentry.NewClient(s.clientOptions())
 	if err != nil {
 		return nil, err
 	}
@@ -53,19 +53,28 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 	return s.core, nil
 }
 
-func (s *sentrySink) update(updated SinksConfig) error {
-	var updatedDSN string
-	if updated.Sentry != nil {
-		updatedDSN = updated.Sentry.DSN
+func (s *sentrySink) clientOptions() sentry.ClientOptions {
+	return sentry.ClientOptions{
+		Dsn:        s.DSN,
+		SampleRate: s.SampleRate,
+		Debug:      s.Debug,
 	}
+}
 
-	if s.DSN == updatedDSN {
+func (s *sentrySink) update(updated SinksConfig) error {
+	if updated.Sentry == nil {
 		return nil
 	}
 
-	opts := s.SentrySink.options
-	opts.Dsn = updatedDSN
-	client, err := sentry.NewClient(opts)
+	if s.DSN == updated.Sentry.DSN && s.SampleRate == updated.Sentry.SampleRate && s.Debug == updated.Sentry.Debug {
+		return nil
+	}
+
+	s.DSN = updated.Sentry.DSN
+	s.SampleRate = updated.Sentry.SampleRate
+	s.Debug = updated.Sentry.Debug
+
+	client, err := sentry.NewClient(s.clientOptions())
 	if err != nil {
 		return err
 	}
