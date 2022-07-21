@@ -13,10 +13,15 @@ import (
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
 	// DSN configures the Sentry reporting destination.
-	// This value is set by Sourcegraph.com when it reads the DSN from config.
 	DSN string
-
-	options sentry.ClientOptions
+	// The sample rate for event submission in the range [0.0, 1.0]. By default,
+	// all events are sent. Thus, as a historical special case, the sample rate
+	// 0.0 is treated as if it was 1.0. To drop all events, set the DSN to the
+	// empty string.
+	SampleRate float64
+	// In debug mode, the debug information is printed to stdout to help you
+	// understand what sentry is doing.
+	Debug bool
 }
 
 type sentrySink struct {
@@ -29,32 +34,13 @@ type sentrySink struct {
 //
 // See sentrycore.DefaultSentryClientOptions for the default options.
 func NewSentrySink() Sink {
-	return &sentrySink{SentrySink: SentrySink{options: sentrycore.DefaultSentryClientOptions}}
-}
-
-// NewSentrySinkWithOptions instantiates a Sentry sink with advanced initial configuration
-// to provide to `log.Init`. Note that configuration, notably the Sentry DSN, may be
-// overwritten by subsequent calls to the `Update` callback from `log.Init`.
-//
-// See sentrycore.DefaultSentryClientOptions for the default options.
-func NewSentrySinkWithOptions(opts sentry.ClientOptions) Sink {
-	return &sentrySink{SentrySink: SentrySink{options: sentrycore.ApplySentryClientDefaultOptions(opts)}}
+	return &sentrySink{SentrySink: SentrySink{}}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
 
 func (s *sentrySink) build() (zapcore.Core, error) {
-	opts := s.SentrySink.options
-
-	// only set the dsn when it is not defined in opts
-	if opts.Dsn == "" {
-		opts.Dsn = s.DSN
-	} else {
-		// update the SentrySink DSN so that it is aligned with the options dsn
-		s.DSN = opts.Dsn
-	}
-
-	client, err := sentry.NewClient(opts)
+	client, err := sentry.NewClient(s.clientOptions())
 	if err != nil {
 		return nil, err
 	}
@@ -62,20 +48,28 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 	return s.core, nil
 }
 
-func (s *sentrySink) update(updated SinksConfig) error {
-	var updatedDSN string
-	if updated.Sentry != nil {
-		updatedDSN = updated.Sentry.DSN
+func (s *sentrySink) clientOptions() sentry.ClientOptions {
+	return sentry.ClientOptions{
+		Dsn:        s.DSN,
+		SampleRate: s.SampleRate,
+		Debug:      s.Debug,
 	}
+}
 
-	// no change: current sentry dsn and updated dsn are the same
-	if s.DSN == updatedDSN {
+func (s *sentrySink) update(updated SinksConfig) error {
+	if updated.Sentry == nil {
 		return nil
 	}
 
-	opts := s.SentrySink.options
-	opts.Dsn = updatedDSN
-	client, err := sentry.NewClient(opts)
+	if s.DSN == updated.Sentry.DSN && s.SampleRate == updated.Sentry.SampleRate && s.Debug == updated.Sentry.Debug {
+		return nil
+	}
+
+	s.DSN = updated.Sentry.DSN
+	s.SampleRate = updated.Sentry.SampleRate
+	s.Debug = updated.Sentry.Debug
+
+	client, err := sentry.NewClient(s.clientOptions())
 	if err != nil {
 		return err
 	}
