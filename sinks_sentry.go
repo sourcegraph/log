@@ -30,11 +30,16 @@ type sentrySink struct {
 	core *sentrycore.Core
 }
 
-// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with default options.
-//
-// See sentrycore.DefaultSentryClientOptions for the default options.
+// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with the following default values:
+// - SampleRate: 0.1
+// To provide different values see `NewSentrySinkWith`
 func NewSentrySink() Sink {
-	return &sentrySink{SentrySink: SentrySink{}}
+	return &sentrySink{SentrySink: SentrySink{SampleRate: 0.1}}
+}
+
+// NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink
+func NewSentrySinkWith(s SentrySink) Sink {
+	return &sentrySink{SentrySink: s}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
