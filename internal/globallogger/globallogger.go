@@ -10,7 +10,7 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/sourcegraph/log/internal/encoders"
-	"github.com/sourcegraph/log/otfields"
+	"github.com/sourcegraph/log/internal/otelfields"
 )
 
 var (
@@ -37,7 +37,7 @@ func Get(safe bool) *zap.Logger {
 
 // Init initializes the global logger once. Subsequent calls are no-op. Returns the
 // callback to sync the root core.
-func Init(r otfields.Resource, development bool, sinks []zapcore.Core) func() error {
+func Init(r otelfields.Resource, development bool, sinks []zapcore.Core) func() error {
 	// Update global
 	devMode = development
 
@@ -52,7 +52,7 @@ func IsInitialized() bool {
 	return globalLogger != nil
 }
 
-func initLogger(r otfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
+func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
 	internalErrsSink, err := openStderr()
 	if err != nil {
 		panic(err.Error())
@@ -77,7 +77,7 @@ func initLogger(r otfields.Resource, development bool, sinks []zapcore.Core) *za
 	if r.InstanceID == "" {
 		r.InstanceID = uuid.New().String()
 	}
-	return logger.With(zap.Object(otfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: r}))
+	return logger.With(zap.Object(otelfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: r}))
 }
 
 func openStderr() (zapcore.WriteSyncer, error) {

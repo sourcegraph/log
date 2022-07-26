@@ -16,7 +16,6 @@ import (
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/internal/sinkcores/outputcore"
 	"github.com/sourcegraph/log/internal/stderr"
-	"github.com/sourcegraph/log/otfields"
 )
 
 // stdTestInit guards the initialization of the standard library testing package.
@@ -61,7 +60,7 @@ func initGlobal(level zapcore.Level) {
 	}
 	core := outputcore.NewDevelopmentCore(output, level, encoders.OutputConsole)
 	// use an empty resource, we don't log output Resource in dev mode anyway
-	globallogger.Init(otfields.Resource{}, true, []zapcore.Core{core})
+	globallogger.Init(log.Resource{}, true, []zapcore.Core{core})
 }
 
 type CapturedLog struct {

@@ -12,9 +12,9 @@ import (
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/internal/configurable"
 	"github.com/sourcegraph/log/internal/encoders"
+	"github.com/sourcegraph/log/internal/otelfields"
 	"github.com/sourcegraph/log/internal/sinkcores/sentrycore"
 	"github.com/sourcegraph/log/logtest"
-	"github.com/sourcegraph/log/otfields"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -95,7 +95,7 @@ func TestTags(t *testing.T) {
 			Name:    "foobar",
 			Version: "123",
 		}
-		logger.Error("msg", log.Error(e), zap.Object(otfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: resource}))
+		logger.Error("msg", log.Error(e), zap.Object(otelfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: resource}))
 		sync()
 		assert.Len(t, tr.Events(), 1)
 		assert.Equal(t, tr.Events()[0].Tags["resource.service.name"], "foobar")

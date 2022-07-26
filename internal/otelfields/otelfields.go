@@ -1,4 +1,4 @@
-package otfields
+package otelfields
 
 import "go.uber.org/zap"
 
