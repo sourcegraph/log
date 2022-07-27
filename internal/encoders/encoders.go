@@ -3,11 +3,11 @@ package encoders
 import (
 	"go.uber.org/zap/zapcore"
 
-	"github.com/sourcegraph/log/otfields"
+	"github.com/sourcegraph/log/internal/otelfields"
 )
 
 type ResourceEncoder struct {
-	otfields.Resource
+	otelfields.Resource
 }
 
 var _ zapcore.ObjectMarshaler = &ResourceEncoder{}
@@ -31,7 +31,7 @@ func (r *ResourceEncoder) MarshalLogObject(enc zapcore.ObjectEncoder) error {
 	return nil
 }
 
-type TraceContextEncoder struct{ otfields.TraceContext }
+type TraceContextEncoder struct{ otelfields.TraceContext }
 
 var _ zapcore.ObjectMarshaler = &TraceContextEncoder{}
 

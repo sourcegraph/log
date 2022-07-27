@@ -7,8 +7,8 @@ import (
 
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/internal/globallogger"
+	"github.com/sourcegraph/log/internal/otelfields"
 	"github.com/sourcegraph/log/logtest"
-	"github.com/sourcegraph/log/otfields"
 )
 
 func TestLogger(t *testing.T) {
@@ -18,7 +18,7 @@ func TestLogger(t *testing.T) {
 	// HACK: If in devmode, the attributes namespace does not get added, but we want to
 	// test that behaviour here so we add it back.
 	if globallogger.DevMode() {
-		logger = logger.With(otfields.AttributesNamespace)
+		logger = logger.With(otelfields.AttributesNamespace)
 	}
 
 	logger.Debug("a debug message") // 0

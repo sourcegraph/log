@@ -2,7 +2,7 @@ package log
 
 import (
 	"github.com/sourcegraph/log/internal/globallogger"
-	"github.com/sourcegraph/log/otfields"
+	"github.com/sourcegraph/log/internal/otelfields"
 )
 
 var (
@@ -28,7 +28,7 @@ var (
 	EnvLogSamplingThereafter = "SRC_LOG_SAMPLING_THEREAFTER"
 )
 
-type Resource = otfields.Resource
+type Resource = otelfields.Resource
 
 // PostInitCallbacks is a set of callbacks returned by Init that enables finalization and
 // updating of any configured sinks.

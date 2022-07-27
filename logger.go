@@ -9,10 +9,13 @@ import (
 
 	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/globallogger"
-	"github.com/sourcegraph/log/otfields"
+	"github.com/sourcegraph/log/internal/otelfields"
 )
 
-type TraceContext = otfields.TraceContext
+// TraceContext represents a trace to associate with log entries.
+//
+// https://opentelemetry.io/docs/reference/specification/logs/data-model/#trace-context-fields
+type TraceContext = otelfields.TraceContext
 
 // Logger is an OpenTelemetry-compliant logger. All functions that log output should hold
 // a reference to a Logger that gets passed in from callers, so as to maintain fields and
@@ -96,7 +99,7 @@ func Scoped(scope string, description string) Logger {
 		// rather difficult to read.
 		return adapted.Scoped(scope, description)
 	}
-	return adapted.Scoped(scope, description).With(otfields.AttributesNamespace)
+	return adapted.Scoped(scope, description).With(otelfields.AttributesNamespace)
 }
 
 type zapAdapter struct {
