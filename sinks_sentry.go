@@ -2,6 +2,7 @@ package log
 
 import (
 	"github.com/getsentry/sentry-go"
+	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/sourcegraph/log/internal/sinkcores/sentrycore"
@@ -12,16 +13,8 @@ import (
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	// DSN configures the Sentry reporting destination.
-	DSN string
-	// The sample rate for event submission in the range [0.0, 1.0]. By default,
-	// all events are sent. Thus, as a historical special case, the sample rate
-	// 0.0 is treated as if it was 1.0. To drop all events, set the DSN to the
-	// empty string.
-	SampleRate float64
-	// In debug mode, the debug information is printed to stdout to help you
-	// understand what sentry is doing.
-	Debug bool
+	// ClientOptions expose various options to configure the Sentry client
+	sentry.ClientOptions
 }
 
 type sentrySink struct {
@@ -34,18 +27,20 @@ type sentrySink struct {
 // - SampleRate: 0.1
 // To provide different values see `NewSentrySinkWith`
 func NewSentrySink() Sink {
-	return &sentrySink{SentrySink: SentrySink{SampleRate: 0.1}}
+	return &sentrySink{SentrySink: SentrySink{sentrycore.DefaultSentryClientOptions}}
 }
 
-// NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink
+// NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink.
+// Default values are set if they do not exist in the given sink
 func NewSentrySinkWith(s SentrySink) Sink {
-	return &sentrySink{SentrySink: s}
+	opts := sentrycore.ApplySentryClientDefaultOptions(s.ClientOptions)
+	return &sentrySink{SentrySink: SentrySink{opts}}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
 
 func (s *sentrySink) build() (zapcore.Core, error) {
-	client, err := sentry.NewClient(s.clientOptions())
+	client, err := sentry.NewClient(s.ClientOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -53,28 +48,18 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 	return s.core, nil
 }
 
-func (s *sentrySink) clientOptions() sentry.ClientOptions {
-	return sentry.ClientOptions{
-		Dsn:        s.DSN,
-		SampleRate: s.SampleRate,
-		Debug:      s.Debug,
-	}
-}
-
 func (s *sentrySink) update(updated SinksConfig) error {
 	if updated.Sentry == nil {
 		return nil
 	}
 
-	if s.DSN == updated.Sentry.DSN && s.SampleRate == updated.Sentry.SampleRate && s.Debug == updated.Sentry.Debug {
+	if cmp.Equal(s.ClientOptions, updated.Sentry.ClientOptions) {
 		return nil
 	}
 
-	s.DSN = updated.Sentry.DSN
-	s.SampleRate = updated.Sentry.SampleRate
-	s.Debug = updated.Sentry.Debug
+	s.ClientOptions = updated.Sentry.ClientOptions
 
-	client, err := sentry.NewClient(s.clientOptions())
+	client, err := sentry.NewClient(s.ClientOptions)
 	if err != nil {
 		return err
 	}
