@@ -2,6 +2,7 @@ package log
 
 import (
 	"github.com/getsentry/sentry-go"
+	"github.com/google/go-cmp/cmp"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/sourcegraph/log/internal/sinkcores/sentrycore"
@@ -12,10 +13,8 @@ import (
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	// DSN configures the Sentry reporting destination
-	DSN string
-
-	options sentry.ClientOptions
+	// ClientOptions expose various options to configure the Sentry client
+	sentry.ClientOptions
 }
 
 type sentrySink struct {
@@ -24,28 +23,24 @@ type sentrySink struct {
 	core *sentrycore.Core
 }
 
-// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with default options.
-//
-// See sentrycore.DefaultSentryClientOptions for the default options.
+// NewSentrySink instantiates a Sentry sink to provide to `log.Init` with the following default values:
+// - SampleRate: 0.1
+// To provide different values see `NewSentrySinkWith`
 func NewSentrySink() Sink {
-	return &sentrySink{SentrySink: SentrySink{options: sentrycore.DefaultSentryClientOptions}}
+	return &sentrySink{SentrySink: SentrySink{sentrycore.DefaultSentryClientOptions}}
 }
 
-// NewSentrySinkWithOptions instantiates a Sentry sink with advanced initial configuration
-// to provide to `log.Init`. Note that configuration, notably the Sentry DSN, may be
-// overwritten by subsequent calls to the `Update` callback from `log.Init`.
-//
-// See sentrycore.DefaultSentryClientOptions for the default options.
-func NewSentrySinkWithOptions(opts sentry.ClientOptions) Sink {
-	return &sentrySink{SentrySink: SentrySink{options: sentrycore.ApplySentryClientDefaultOptions(opts)}}
+// NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink.
+// Default values are set if they do not exist in the given sink
+func NewSentrySinkWith(s SentrySink) Sink {
+	opts := sentrycore.ApplySentryClientDefaultOptions(s.ClientOptions)
+	return &sentrySink{SentrySink: SentrySink{opts}}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
 
 func (s *sentrySink) build() (zapcore.Core, error) {
-	opts := s.SentrySink.options
-	opts.Dsn = s.DSN
-	client, err := sentry.NewClient(opts)
+	client, err := sentry.NewClient(s.ClientOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -54,18 +49,16 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 }
 
 func (s *sentrySink) update(updated SinksConfig) error {
-	var updatedDSN string
-	if updated.Sentry != nil {
-		updatedDSN = updated.Sentry.DSN
-	}
-
-	if s.DSN == updatedDSN {
+	if updated.Sentry == nil {
 		return nil
 	}
 
-	opts := s.SentrySink.options
-	opts.Dsn = updatedDSN
-	client, err := sentry.NewClient(opts)
+	if cmp.Equal(s.ClientOptions, updated.Sentry.ClientOptions) {
+		return nil
+	}
+
+	s.ClientOptions = updated.Sentry.ClientOptions
+	client, err := sentry.NewClient(s.ClientOptions)
 	if err != nil {
 		return err
 	}
