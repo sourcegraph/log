@@ -1,14 +1,16 @@
 package log
 
 import (
+	"os"
+
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/internal/otelfields"
 )
 
-var (
+const (
 	// EnvDevelopment is key of the environment variable that is used to set whether
 	// to use development logger configuration on Init.
-	EnvDevelopment = globallogger.EnvDevelopment
+	EnvDevelopment = "SRC_DEVELOPMENT"
 	// EnvLogLevel is key of the environment variable that is used to set the log format
 	// on Init.
 	EnvLogFormat = "SRC_LOG_FORMAT"
@@ -57,11 +59,13 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 		panic("log.Init initialized multiple times")
 	}
 
-	ss := sinks(append([]Sink{&outputSink{development: globallogger.DevMode()}}, s...))
+	development := os.Getenv(EnvDevelopment) == "true"
+
+	ss := sinks(append([]Sink{&outputSink{development: development}}, s...))
 	cores, sinksBuildErr := ss.build()
 
 	// Init the logger first, so that we can log the error if needed
-	sync := globallogger.Init(r, globallogger.DevMode(), cores)
+	sync := globallogger.Init(r, development, cores)
 
 	if sinksBuildErr != nil {
 		// Log the error
