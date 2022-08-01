@@ -58,7 +58,6 @@ func (s *sentrySink) update(updated SinksConfig) error {
 	}
 
 	s.ClientOptions = updated.Sentry.ClientOptions
-
 	client, err := sentry.NewClient(s.ClientOptions)
 	if err != nil {
 		return err
