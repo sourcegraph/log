@@ -1,7 +1,6 @@
 package globallogger
 
 import (
-	"os"
 	"sync"
 
 	"go.uber.org/zap"
@@ -14,8 +13,7 @@ import (
 )
 
 var (
-	EnvDevelopment   = "SRC_DEVELOPMENT"
-	devMode          = os.Getenv(EnvDevelopment) == "true"
+	devMode          bool
 	globalLogger     *zap.Logger
 	globalLoggerInit sync.Once
 )
@@ -38,9 +36,6 @@ func Get(safe bool) *zap.Logger {
 // Init initializes the global logger once. Subsequent calls are no-op. Returns the
 // callback to sync the root core.
 func Init(r otelfields.Resource, development bool, sinks []zapcore.Core) func() error {
-	// Update global
-	devMode = development
-
 	globalLoggerInit.Do(func() {
 		globalLogger = initLogger(r, development, sinks)
 	})
@@ -53,6 +48,9 @@ func IsInitialized() bool {
 }
 
 func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
+	// Set global
+	devMode = development
+
 	internalErrsSink, err := openStderr()
 	if err != nil {
 		panic(err.Error())

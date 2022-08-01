@@ -15,8 +15,8 @@ func TestLogger(t *testing.T) {
 	logger, exportLogs := logtest.Captured(t)
 	assert.NotNil(t, logger)
 
-	// HACK: If in devmode, the attributes namespace does not get added, but we want to
-	// test that behaviour here so we add it back.
+	// If in devmode, the attributes namespace does not get added, but we want to test
+	// that behaviour here so we add it back.
 	if globallogger.DevMode() {
 		logger = logger.With(otelfields.AttributesNamespace)
 	}

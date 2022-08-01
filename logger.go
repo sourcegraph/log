@@ -86,7 +86,8 @@ type Logger interface {
 // When testing, you should use 'logtest.Scoped(*testing.T)' instead - learn more:
 // https://docs.sourcegraph.com/dev/how-to/add_logging#testing-usage
 func Scoped(scope string, description string) Logger {
-	safeGet := !globallogger.DevMode() // do not panic in prod
+	devMode := globallogger.DevMode()
+	safeGet := !devMode // do not panic in prod
 	root := globallogger.Get(safeGet)
 	adapted := &zapAdapter{
 		Logger:            root,
@@ -94,7 +95,7 @@ func Scoped(scope string, description string) Logger {
 		fromPackageScoped: true,
 	}
 
-	if globallogger.DevMode() {
+	if devMode {
 		// In development, don't add the OpenTelemetry "Attributes" namespace which gets
 		// rather difficult to read.
 		return adapted.Scoped(scope, description)
