@@ -7,11 +7,3 @@ import "github.com/getsentry/sentry-go"
 var DefaultSentryClientOptions = sentry.ClientOptions{
 	SampleRate: 0.1,
 }
-
-// ApplySentryClientDefaultOptions merges opts with the defaults defined in DefaultSentryClientOptions.
-func ApplySentryClientDefaultOptions(opts sentry.ClientOptions) sentry.ClientOptions {
-	if opts.SampleRate == 0 {
-		opts.SampleRate = DefaultSentryClientOptions.SampleRate
-	}
-	return opts
-}
