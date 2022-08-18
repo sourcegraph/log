@@ -31,10 +31,8 @@ func NewSentrySink() Sink {
 }
 
 // NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink.
-// Default values are set if they do not exist in the given sink
 func NewSentrySinkWith(s SentrySink) Sink {
-	opts := sentrycore.ApplySentryClientDefaultOptions(s.ClientOptions)
-	return &sentrySink{SentrySink: SentrySink{opts}}
+	return &sentrySink{SentrySink: SentrySink{s.ClientOptions}}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
