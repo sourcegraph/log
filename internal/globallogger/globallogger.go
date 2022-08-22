@@ -49,6 +49,8 @@ func IsInitialized() bool {
 }
 
 // forceSyncer implements the zapcore.CheckWriteHook interface and ensures that sync is called on the provided core.
+// By adding it as a option with zap.WithFatalHook to the logger options, it will ensure Sync is called when a Fatal
+// log is issued.
 // As per the advice from https://pkg.go.dev/go.uber.org/zap#WithFatalHook, os.Exit(1) is called to halt execution after
 // Sync has completed
 type forceSyncer struct {
@@ -57,9 +59,10 @@ type forceSyncer struct {
 
 var _ zapcore.CheckWriteHook = &forceSyncer{}
 
-// OnWrite calls sync on the underlying core and then calls os.Exit(1)
+// OnWrite calls sync on the underlying core and then calls os.Exit(1).
 func (f *forceSyncer) OnWrite(_ *zapcore.CheckedEntry, _ []zapcore.Field) {
-	f.core.Sync()
+	// We ignore the error here, since we're just making sure all cores have synced before exiting
+	_ = f.core.Sync()
 	os.Exit(1)
 }
 
