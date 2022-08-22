@@ -47,6 +47,17 @@ func IsInitialized() bool {
 	return globalLogger != nil
 }
 
+// forceSyncer implements the zapcore.CheckWriteHook interface and ensures that sync is called on the provided core
+type forceSyncer struct {
+	core zapcore.Core
+}
+
+var _ zapcore.CheckWriteHook = &forceSyncer{}
+
+func (f *forceSyncer) OnWrite(_ *zapcore.CheckedEntry, _ []zapcore.Field) {
+	f.core.Sync()
+}
+
 func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
 	// Set global
 	devMode = development
@@ -62,6 +73,10 @@ func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *
 	}
 
 	core := zapcore.NewTee(sinks...)
+
+	// Add a forceSyncer on the core to ensure Sync is executed on the underlying core when Fatal is called, since
+	// after Fatal os.Exit is called per default configuration
+	options = append(options, zap.WithFatalHook(&forceSyncer{core}))
 	logger := zap.New(core, options...)
 
 	if development {
