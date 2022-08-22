@@ -50,7 +50,7 @@ func IsInitialized() bool {
 
 // forceSyncer implements the zapcore.CheckWriteHook interface and ensures that sync is called on the provided core.
 // As per the advice from https://pkg.go.dev/go.uber.org/zap#WithFatalHook, os.Exit(1) is called to halt execution after
-// Sync has compelted
+// Sync has completed
 type forceSyncer struct {
 	core zapcore.Core
 }
