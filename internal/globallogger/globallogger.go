@@ -1,6 +1,7 @@
 package globallogger
 
 import (
+	"os"
 	"sync"
 
 	"go.uber.org/zap"
@@ -47,6 +48,24 @@ func IsInitialized() bool {
 	return globalLogger != nil
 }
 
+// forceSyncer implements the zapcore.CheckWriteHook interface and ensures that sync is called on the provided core.
+// By adding it as a option with zap.WithFatalHook to the logger options, it will ensure Sync is called when a Fatal
+// log is issued.
+// As per the advice from https://pkg.go.dev/go.uber.org/zap#WithFatalHook, os.Exit(1) is called to halt execution after
+// Sync has completed
+type forceSyncer struct {
+	core zapcore.Core
+}
+
+var _ zapcore.CheckWriteHook = &forceSyncer{}
+
+// OnWrite calls sync on the underlying core and then calls os.Exit(1).
+func (f *forceSyncer) OnWrite(_ *zapcore.CheckedEntry, _ []zapcore.Field) {
+	// We ignore the error here, since we're just making sure all cores have synced before exiting
+	_ = f.core.Sync()
+	os.Exit(1)
+}
+
 func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
 	// Set global
 	devMode = development
@@ -62,6 +81,10 @@ func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *
 	}
 
 	core := zapcore.NewTee(sinks...)
+
+	// Add a forceSyncer on the core to ensure Sync is executed on the underlying core when Fatal is called, since
+	// after Fatal os.Exit is called per default configuration
+	options = append(options, zap.WithFatalHook(&forceSyncer{core}))
 	logger := zap.New(core, options...)
 
 	if development {
