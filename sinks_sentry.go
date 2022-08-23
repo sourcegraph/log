@@ -15,7 +15,7 @@ type SentryClientOptions = sentry.ClientOptions
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
-	// ClientOptions expose various options to configure the Sentry client
+	// SentryClientOptions expose various options to configure the Sentry client
 	SentryClientOptions
 }
 
