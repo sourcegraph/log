@@ -8,13 +8,15 @@ import (
 	"github.com/sourcegraph/log/internal/sinkcores/sentrycore"
 )
 
+type SentryClientOptions = sentry.ClientOptions
+
 // SentrySink reports all warning-level and above log messages that contain an error field
 // (via the `log.Error(err)` or `log.NamedError(name, err)` field constructors) to Sentry,
 // complete with stacktrace data and any additional context logged in the corresponding
 // log message (including anything accumulated on a sub-logger).
 type SentrySink struct {
 	// ClientOptions expose various options to configure the Sentry client
-	sentry.ClientOptions
+	SentryClientOptions
 }
 
 type sentrySink struct {
@@ -31,14 +33,14 @@ func NewSentrySink() Sink {
 }
 
 // NewSentrySinkWith instantiates a Sentry sink to provide to `log.Init` with the values provided in SentrySink.
-func NewSentrySinkWith(s SentrySink) Sink {
-	return &sentrySink{SentrySink: SentrySink{s.ClientOptions}}
+func NewSentrySinkWith(opts SentryClientOptions) Sink {
+	return &sentrySink{SentrySink: SentrySink{SentryClientOptions: opts}}
 }
 
 func (s *sentrySink) Name() string { return "SentrySink" }
 
 func (s *sentrySink) build() (zapcore.Core, error) {
-	client, err := sentry.NewClient(s.ClientOptions)
+	client, err := sentry.NewClient(s.SentryClientOptions)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +53,12 @@ func (s *sentrySink) update(updated SinksConfig) error {
 		return nil
 	}
 
-	if cmp.Equal(s.ClientOptions, updated.Sentry.ClientOptions) {
+	if cmp.Equal(s.SentryClientOptions, updated.Sentry.SentryClientOptions) {
 		return nil
 	}
 
-	s.ClientOptions = updated.Sentry.ClientOptions
-	client, err := sentry.NewClient(s.ClientOptions)
+	s.SentryClientOptions = updated.Sentry.SentryClientOptions
+	client, err := sentry.NewClient(s.SentryClientOptions)
 	if err != nil {
 		return err
 	}
