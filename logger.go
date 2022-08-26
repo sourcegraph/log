@@ -37,7 +37,8 @@ type Logger interface {
 	//
 	// https://opentelemetry.io/docs/reference/specification/logs/data-model/#field-attributes
 	With(...Field) Logger
-	// WithTrace creates a new Logger with the given trace context.
+	// WithTrace creates a new Logger with the given trace context. If TraceContext has no
+	// fields set, this function is a no-op.
 	//
 	// https://opentelemetry.io/docs/reference/specification/logs/data-model/#trace-context-fields
 	WithTrace(TraceContext) Logger
@@ -170,6 +171,10 @@ func (z *zapAdapter) With(fields ...Field) Logger {
 }
 
 func (z *zapAdapter) WithTrace(trace TraceContext) Logger {
+	if trace.TraceID == "" && trace.SpanID == "" {
+		return z // no-op
+	}
+
 	newLogger := z.rootLogger.
 		// insert trace before attributes
 		With(zap.Inline(&encoders.TraceContextEncoder{TraceContext: trace})).
