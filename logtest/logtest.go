@@ -152,6 +152,6 @@ func Captured(t testing.TB) (logger log.Logger, exportLogs func() []CapturedLog)
 }
 
 // NoOp returns a no-op Logger, useful for silencing all output in a specific test.
-func NoOp(t *testing.T) log.Logger {
-	return Scoped(t).IncreaseLevel("noop", "no-op logger", log.LevelNone)
+func NoOp(_ *testing.T) log.Logger {
+	return log.NoOp()
 }
