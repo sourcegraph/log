@@ -104,6 +104,17 @@ func Scoped(scope string, description string) Logger {
 	return adapted.Scoped(scope, description).With(otelfields.AttributesNamespace)
 }
 
+// NoOp returns a no-op Logger that can never produce any output. It can be safely created
+// before initialization. Use sparingly, and do not use with the intent of replacing it
+// post-initialization.
+func NoOp() Logger {
+	root := zap.NewNop()
+	return &zapAdapter{
+		Logger:     root,
+		rootLogger: root,
+	}
+}
+
 type zapAdapter struct {
 	*zap.Logger
 
