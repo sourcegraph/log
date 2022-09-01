@@ -250,9 +250,9 @@ func (z *zapAdapter) WithCore(f func(c zapcore.Core) zapcore.Core) Logger {
 	}
 }
 
-func (z *zapAdapter) Audit(message string, field ...Field) {
-	//TODO implement me
-	panic("implement me")
+func (z *zapAdapter) Audit(message string, fields ...Field) {
+	fields = append(fields, String("audit", "true"))
+	z.Info(message, fields...)
 }
 
 func createScope(parent, child string) string {
