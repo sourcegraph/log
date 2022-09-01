@@ -4,6 +4,7 @@ import (
 	"os"
 	"sync"
 
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
@@ -14,7 +15,9 @@ import (
 )
 
 var (
-	EnvDevelopment   = "SRC_DEVELOPMENT"
+	EnvDevelopment = "SRC_DEVELOPMENT"
+	initialized    atomic.Bool
+
 	devMode          = os.Getenv(EnvDevelopment) == "true"
 	globalLogger     *zap.Logger
 	globalLoggerInit sync.Once
@@ -38,19 +41,16 @@ func Get(safe bool) *zap.Logger {
 // Init initializes the global logger once. Subsequent calls are no-op. Returns the
 // callback to sync the root core.
 func Init(r otelfields.Resource, development bool, sinks []zapcore.Core) func() error {
-	// Update global
-	devMode = development
-
 	globalLoggerInit.Do(func() {
+		devMode = development
 		globalLogger = initLogger(r, development, sinks)
+		initialized.Store(true)
 	})
 	return globalLogger.Sync
 }
 
 // IsInitialized indicates if the global logger is initialized.
-func IsInitialized() bool {
-	return globalLogger != nil
-}
+func IsInitialized() bool { return initialized.Load() }
 
 // forceSyncer implements the zapcore.CheckWriteHook interface and ensures that sync is called on the provided core.
 // By adding it as a option with zap.WithFatalHook to the logger options, it will ensure Sync is called when a Fatal
