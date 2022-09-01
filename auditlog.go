@@ -6,8 +6,6 @@ type Actor struct {
 	ForwardedFor string
 }
 
-//TODO describe the 'actor takes an action on entity' idea
-
 func (z *zapAdapter) Audit(actor Actor, action string, fields ...Field) {
 	fields = append(fields, String("audit", "true"))
 

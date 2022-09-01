@@ -53,7 +53,8 @@ type Logger interface {
 	Info(string, ...Field)
 
 	// Audit logs an info message, including any fields accumulated on the Logger.
-	// Additionally, Audit appends an "audit": "true" to the Attributes map so that it is easily recognizable by the audit log consumer.
+	// Additionally, Audit appends several fields to the Attributes map so that it is easily recognizable by the audit log consumer.
+	// Fields appended: audit, audit.actor (with nested fields), audit.action, audit.entity.
 	Audit(actor Actor, action string, fields ...Field)
 
 	// Warn logs a message at WarnLevel, including any fields accumulated on the Logger.

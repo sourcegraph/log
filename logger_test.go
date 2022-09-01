@@ -37,8 +37,14 @@ func TestLogger(t *testing.T) {
 			log.String("field2", "value"),
 		))
 
+	logger.Audit(log.Actor{ // 5
+		ActorUID:     "1",
+		IP:           "192.168.0.1",
+		ForwardedFor: "192.168.0.1",
+	}, "some audit action", log.String("extra_stuff", "extra_value"))
+
 	logs := exportLogs()
-	assert.Len(t, logs, 5)
+	assert.Len(t, logs, 6)
 	for _, l := range logs {
 		assert.Equal(t, "TestLogger", l.Scope) // scope is always applied
 	}
@@ -64,4 +70,18 @@ func TestLogger(t *testing.T) {
 			"field2": "value",
 		},
 	}, logs[4].Fields["Attributes"])
+
+	// Audit fields should be in attributes
+	assert.Equal(t, map[string]interface{}{
+		"audit":        "true",
+		"audit.action": "some audit action",
+		"audit.entity": "TestLogger",
+		"audit.actor": map[string]interface{}{
+			"actorUID":        "1",
+			"ip":              "192.168.0.1",
+			"X-Forwarded-For": "192.168.0.1",
+		},
+		"some":        "field",
+		"extra_stuff": "extra_value",
+	}, logs[5].Fields["Attributes"])
 }
