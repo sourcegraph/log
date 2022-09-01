@@ -51,6 +51,11 @@ type Logger interface {
 	//
 	// Info is the default logging priority.
 	Info(string, ...Field)
+
+	// Audit logs an info message, including any fields accumulated on the Logger.
+	// Additionally, Audit appends an "audit": "true" to the Attributes map so that it is easily recognizable by the audit log consumer.
+	Audit(string, ...Field)
+
 	// Warn logs a message at WarnLevel, including any fields accumulated on the Logger.
 	//
 	// Warning logs are more important than Info, but don't need individual human review.
@@ -243,6 +248,11 @@ func (z *zapAdapter) WithCore(f func(c zapcore.Core) zapcore.Core) Logger {
 		fullScope:  z.fullScope,
 		attributes: z.attributes,
 	}
+}
+
+func (z *zapAdapter) Audit(message string, field ...Field) {
+	//TODO implement me
+	panic("implement me")
 }
 
 func createScope(parent, child string) string {
