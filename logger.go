@@ -67,7 +67,7 @@ type Logger interface {
 	Fatal(string, ...Field)
 
 	// AddCallerSkip increases the number of callers skipped by caller annotation. When
-	// building wrappers around the Logger, supplying this Option prevents the Logger from
+	// building wrappers around the Logger, using AddCallerSkip prevents the Logger from
 	// always reporting the wrapper code as the caller.
 	AddCallerSkip(int) Logger
 	// IncreaseLevel creates a logger that only logs at or above the given level for the given
