@@ -9,7 +9,7 @@ var (
 	// EnvDevelopment is key of the environment variable that is used to set whether
 	// to use development logger configuration on Init.
 	EnvDevelopment = globallogger.EnvDevelopment
-	// EnvLogLevel is key of the environment variable that is used to set the log format
+	// EnvLogFormat is key of the environment variable that is used to set the log format
 	// on Init.
 	EnvLogFormat = "SRC_LOG_FORMAT"
 	// EnvLogLevel is key of the environment variable that can be used to set the log
