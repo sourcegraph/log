@@ -38,7 +38,9 @@ type Logger interface {
 	// https://opentelemetry.io/docs/reference/specification/logs/data-model/#field-attributes
 	With(...Field) Logger
 	// WithTrace creates a new Logger with the given trace context. If TraceContext has no
-	// fields set, this function is a no-op.
+	// fields set, this function is a no-op. If WithTrace has already been called on this
+	// logger with a valid TraceContext, the existing TraceContext will be overwritten
+	// with the new TraceContext.
 	//
 	// https://opentelemetry.io/docs/reference/specification/logs/data-model/#trace-context-fields
 	WithTrace(TraceContext) Logger
@@ -65,7 +67,7 @@ type Logger interface {
 	Fatal(string, ...Field)
 
 	// AddCallerSkip increases the number of callers skipped by caller annotation. When
-	// building wrappers around the Logger, supplying this Option prevents the Logger from
+	// building wrappers around the Logger, using AddCallerSkip prevents the Logger from
 	// always reporting the wrapper code as the caller.
 	AddCallerSkip(int) Logger
 	// IncreaseLevel creates a logger that only logs at or above the given level for the given
@@ -185,6 +187,9 @@ func (z *zapAdapter) WithTrace(trace TraceContext) Logger {
 		return z // no-op
 	}
 
+	// Reconstruct the logger - the TraceContext is not added to z.attributes, so this
+	// effectively overwrites any existing TraceContext set with the new one. Note that
+	// we never get to this point with a zero-value TraceContext, which no-ops earlier.
 	newLogger := z.rootLogger.
 		// insert trace before attributes
 		With(zap.Inline(&encoders.TraceContextEncoder{TraceContext: trace})).

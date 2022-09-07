@@ -11,7 +11,7 @@ import (
 	"github.com/sourcegraph/log/logtest"
 )
 
-func TestLogger(t *testing.T) {
+func newTestLogger(t *testing.T) (log.Logger, func() []logtest.CapturedLog) {
 	logger, exportLogs := logtest.Captured(t)
 	assert.NotNil(t, logger)
 
@@ -20,6 +20,13 @@ func TestLogger(t *testing.T) {
 	if globallogger.DevMode() {
 		logger = logger.With(otelfields.AttributesNamespace)
 	}
+
+	return logger, exportLogs
+}
+
+func TestLogger(t *testing.T) {
+
+	logger, exportLogs := newTestLogger(t)
 
 	logger.Debug("a debug message") // 0
 
@@ -64,4 +71,22 @@ func TestLogger(t *testing.T) {
 			"field2": "value",
 		},
 	}, logs[4].Fields["Attributes"])
+}
+
+func TestWithTrace(t *testing.T) {
+	logger, exportLogs := newTestLogger(t)
+
+	logger = logger.WithTrace(log.TraceContext{})
+	logger.Info("should not have trace") // 0
+
+	logger = logger.WithTrace(log.TraceContext{TraceID: "1"})
+	logger.Info("should have trace 1") // 1
+
+	logger = logger.WithTrace(log.TraceContext{TraceID: "2"})
+	logger.Info("should have trace 2") // 2
+
+	logs := exportLogs()
+	assert.NotContains(t, logs[0].Fields, "TraceId")
+	assert.Equal(t, "1", logs[1].Fields["TraceId"])
+	assert.Equal(t, "2", logs[2].Fields["TraceId"])
 }
