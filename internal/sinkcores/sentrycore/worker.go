@@ -135,7 +135,15 @@ func (w *worker) capture(errCtx *errorContext) {
 		if f.Key == otelfields.ResourceFieldKey {
 			if r, ok := f.Interface.(*encoders.ResourceEncoder); ok {
 				tags["resource.service.name"] = r.Name
-				tags["resource.service.version"] = r.Version
+				if r.Version != "" {
+					tags["resource.service.version"] = r.Version
+				}
+				if r.Namespace != "" {
+					tags["resource.service.namespace"] = r.Namespace
+				}
+				if r.InstanceID != "" {
+					tags["resource.service.instance.id"] = r.InstanceID
+				}
 			}
 		}
 	}
