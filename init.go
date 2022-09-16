@@ -1,6 +1,8 @@
 package log
 
 import (
+	"os"
+
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/internal/otelfields"
 )
@@ -57,11 +59,18 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 		panic("log.Init initialized multiple times")
 	}
 
-	ss := sinks(append([]Sink{&outputSink{development: globallogger.DevMode()}}, s...))
+	// On initialization we get dev mode from env directly instead of from globallogger's
+	// package variable (globallogger.DevMode()) in case the caller has set an env var
+	// override, and globallogger.Init will update the global variable.
+	currentDevMode := os.Getenv(globallogger.EnvDevelopment) == "true"
+
+	// Initialize sinks
+	ss := sinks(append([]Sink{&outputSink{development: currentDevMode}}, s...))
 	cores, sinksBuildErr := ss.build()
 
-	// Init the logger first, so that we can log the error if needed
-	sync := globallogger.Init(r, globallogger.DevMode(), cores)
+	// Init the logger first, so that we can log the error if needed, before dealing with
+	// sink builder errors
+	sync := globallogger.Init(r, currentDevMode, cores)
 
 	if sinksBuildErr != nil {
 		// Log the error
