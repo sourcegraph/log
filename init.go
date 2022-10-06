@@ -36,7 +36,11 @@ type Resource = otelfields.Resource
 // updating of any configured sinks.
 type PostInitCallbacks struct {
 	// Sync must be called before application exit, such as via defer.
-	Sync func() error
+	//
+	// Note: The error from sync is suppressed since this is usually called as a
+	// defer in func main. In that case there isn't a reasonable way to handle the
+	// error. As such this function signature doesn't return an error.
+	Sync func()
 
 	// Update should be called to change sink configuration, e.g. via
 	// conf.Watch. Note that sinks not created upon initialization will
@@ -79,7 +83,7 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 	}
 
 	return &PostInitCallbacks{
-		Sync:   sync,
+		Sync:   func() { _ = sync() },
 		Update: ss.update,
 	}
 }
