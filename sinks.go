@@ -5,7 +5,7 @@ import (
 )
 
 // Sink describes additional destinations that github.com/sourcegraph/log can send log
-// entries to. It can only be implmented directly within the package.
+// entries to. It can only be implemented directly within the package.
 type Sink interface {
 	Name() string
 
