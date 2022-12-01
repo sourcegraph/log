@@ -8,18 +8,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// SamplingConfig enables sampling if Initial is set. Sampling is keyed off of the log
-// message only - see:
-//
-// - https://github.com/uber-go/zap/blob/master/FAQ.md#why-sample-application-logs
-// - https://github.com/uber-go/zap/blob/master/FAQ.md#why-do-the-structured-logging-apis-take-a-message-in-addition-to-fields
-type SamplingConfig struct {
-	// First n entries to always log
-	Initial int
-	// Only log each nth entry
-	Thereafter int
-}
-
 func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format encoders.OutputFormat, sampling zap.SamplingConfig) zapcore.Core {
 	core := zapcore.NewCore(
 		encoders.BuildEncoder(format, false),
