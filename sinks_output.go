@@ -29,7 +29,7 @@ func (s *outputSink) build() (zapcore.Core, error) {
 	format := encoders.ParseOutputFormat(os.Getenv(EnvLogFormat))
 
 	if s.development {
-		return outputcore.NewDevelopmentCore(output, level, format), nil
+		format = encoders.OutputConsole
 	}
 
 	sampling, err := parseSamplingConfig()
