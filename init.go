@@ -24,6 +24,8 @@ var (
 	//
 	// Note: these levels do not respect the root level (SRC_LOG_LEVEL), so this
 	// allows operators to turn up the verbosity of specific logs.
+	//
+	// Note: this only affects the outputcore (ie will not effect sentrycore).
 	EnvLogScopeLevel = "SRC_LOG_SCOPE_LEVEL"
 	// EnvLogSamplingInitial is key of the environment variable that can be used to set
 	// the number of entries with identical messages to always output per second.
