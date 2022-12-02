@@ -18,6 +18,8 @@ type Override struct {
 }
 
 func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format encoders.OutputFormat, sampling zap.SamplingConfig, overrides []Override) zapcore.Core {
+	// We need to adjust level we construct NewCore such that if a level is
+	// overriden we end up logging it.
 	minOverrideLevel := level
 	for _, o := range overrides {
 		if !minOverrideLevel.Enabled(o.Level) {
@@ -25,14 +27,19 @@ func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format enco
 		}
 	}
 
-	core := &overrideCore{
-		enc: encoders.BuildEncoder(format, false),
-		out: output,
+	core := zapcore.NewCore(
+		encoders.BuildEncoder(format, false),
+		output,
+		minOverrideLevel,
+	)
 
-		level:            level,
-		minOverrideLevel: minOverrideLevel,
-
-		overrides: overrides,
+	// Only use overrideCore if it could have an effect.
+	if minOverrideLevel != level {
+		core = &overrideCore{
+			Core:      core,
+			level:     level,
+			overrides: overrides,
+		}
 	}
 
 	if sampling.Initial > 0 {
@@ -41,48 +48,39 @@ func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format enco
 	return core
 }
 
-// override is a zapcore.Core and zapcore.LevelEnabler which additionally
-// will logs entries were allow returns true no matter the level.
-//
-// This does not wrap another core since that would not allow us to override
-// that core's level. It is mostly copy pasta of zapcore.ioCore
+// overrideCore wraps a core to additionally log a message if it matches
+// overrides or level.
 type overrideCore struct {
-	enc zapcore.Encoder
-	out zapcore.WriteSyncer
+	// Core is the wrapped core. Note its level must be lowered such that if a
+	// message matches an override it will be logged. Then we gate everything
+	// else with level.
+	zapcore.Core
 
-	// level is the passed in level
+	// level is the passed in level before Core was lowered to take into account
+	// the overrides.
 	level zapcore.LevelEnabler
-
-	// minOverrideLevel is the most verbose level we could log at. We have to
-	// return this level as part of our interface since if we have any child
-	// cores they can check directly against us via Enabled.
-	minOverrideLevel zapcore.LevelEnabler
 
 	overrides []Override
 }
 
-func (c *overrideCore) Enabled(l zapcore.Level) bool {
-	return c.minOverrideLevel.Enabled(l)
-}
-
 func (c *overrideCore) Level() zapcore.Level {
-	return zapcore.LevelOf(c.minOverrideLevel)
+	return zapcore.LevelOf(c.Core)
 }
 
 func (c *overrideCore) With(fields []zapcore.Field) zapcore.Core {
-	clone := c.clone()
-	for i := range fields {
-		fields[i].AddTo(c.enc)
+	return &overrideCore{
+		Core:      c.Core.With(fields),
+		level:     c.level,
+		overrides: c.overrides,
 	}
-	return clone
 }
 
 func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
 	if c.level.Enabled(ent.Level) {
-		return ce.AddCore(ent, c)
+		return c.Core.Check(ent, ce)
 	}
 
-	if !c.minOverrideLevel.Enabled(ent.Level) {
+	if !c.Core.Enabled(ent.Level) {
 		return ce
 	}
 
@@ -96,43 +94,9 @@ func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapco
 		}
 
 		if o.Level.Enabled(ent.Level) {
-			return ce.AddCore(ent, c)
+			return c.Core.Check(ent, ce)
 		}
 	}
 
 	return ce
-}
-
-func (c *overrideCore) Write(ent zapcore.Entry, fields []zapcore.Field) error {
-	buf, err := c.enc.EncodeEntry(ent, fields)
-	if err != nil {
-		return err
-	}
-	_, err = c.out.Write(buf.Bytes())
-	buf.Free()
-	if err != nil {
-		return err
-	}
-	if ent.Level > zapcore.ErrorLevel {
-		// Since we may be crashing the program, sync the output. Ignore Sync
-		// errors, pending a clean solution to issue #370.
-		c.Sync()
-	}
-	return nil
-}
-
-func (c *overrideCore) Sync() error {
-	return c.out.Sync()
-}
-
-func (c *overrideCore) clone() *overrideCore {
-	return &overrideCore{
-		enc: c.enc.Clone(),
-		out: c.out,
-
-		level:            c.level,
-		minOverrideLevel: c.minOverrideLevel,
-
-		overrides: c.overrides,
-	}
 }
