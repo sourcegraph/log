@@ -18,6 +18,25 @@ type Override struct {
 }
 
 func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format encoders.OutputFormat, sampling zap.SamplingConfig, overrides []Override) zapcore.Core {
+	newCore := func(level zapcore.LevelEnabler) zapcore.Core {
+		return zapcore.NewCore(
+			encoders.BuildEncoder(format, false),
+			output,
+			level,
+		)
+	}
+
+	core := newOverrideCore(level, overrides, newCore)
+
+	if sampling.Initial > 0 {
+		return zapcore.NewSamplerWithOptions(core, time.Second, sampling.Initial, sampling.Thereafter)
+	}
+	return core
+}
+
+// newOverrideCore will create a core with the specific overrides. newCore is
+// required because we need to adjust the level to allow the overrides to log.
+func newOverrideCore(level zapcore.LevelEnabler, overrides []Override, newCore func(zapcore.LevelEnabler) zapcore.Core) zapcore.Core {
 	// We need to adjust level we construct NewCore such that if a level is
 	// overriden we end up logging it.
 	minOverrideLevel := level
@@ -27,25 +46,18 @@ func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format enco
 		}
 	}
 
-	core := zapcore.NewCore(
-		encoders.BuildEncoder(format, false),
-		output,
-		minOverrideLevel,
-	)
+	core := newCore(minOverrideLevel)
 
 	// Only use overrideCore if it could have an effect.
-	if minOverrideLevel != level {
-		core = &overrideCore{
-			Core:      core,
-			level:     level,
-			overrides: overrides,
-		}
+	if minOverrideLevel == level {
+		return core
 	}
 
-	if sampling.Initial > 0 {
-		return zapcore.NewSamplerWithOptions(core, time.Second, sampling.Initial, sampling.Thereafter)
+	return &overrideCore{
+		Core:      core,
+		level:     level,
+		overrides: overrides,
 	}
-	return core
 }
 
 // overrideCore wraps a core to additionally log a message if it matches
