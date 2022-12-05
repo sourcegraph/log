@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -36,7 +37,13 @@ func (s *outputSink) build() (zapcore.Core, error) {
 	if err != nil {
 		return nil, err
 	}
-	return outputcore.NewCore(output, level, format, sampling), nil
+
+	overrides, err := parseOverrides()
+	if err != nil {
+		return nil, err
+	}
+
+	return outputcore.NewCore(output, level, format, sampling, overrides), nil
 }
 
 // update is a no-op because outputSink cannot be changed live.
@@ -64,4 +71,24 @@ func parseSamplingConfig() (config zap.SamplingConfig, err error) {
 	}
 
 	return
+}
+
+func parseOverrides() ([]outputcore.Override, error) {
+	raw := os.Getenv(EnvLogScopeLevel)
+	var overrides []outputcore.Override
+	for _, kv := range strings.Split(raw, ",") {
+		if kv == "" {
+			continue
+		}
+
+		p := strings.SplitN(kv, "=", 2)
+		if len(p) != 2 {
+			return nil, fmt.Errorf("%s=%q is invalid", EnvLogScopeLevel, raw)
+		}
+		overrides = append(overrides, outputcore.Override{
+			Scope: p[0],
+			Level: Level(p[1]).Parse(),
+		})
+	}
+	return overrides, nil
 }

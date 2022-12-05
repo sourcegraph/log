@@ -17,6 +17,21 @@ var (
 	// EnvLogLevel is key of the environment variable that can be used to set the log
 	// level on Init.
 	EnvLogLevel = "SRC_LOG_LEVEL"
+	// EnvLogScopeLevel is key of the environment variable that can be used to
+	// override the log level for specific scopes and its children.
+	//
+	// It has the format "SCOPE_0=LEVEL_0,SCOPE_1=LEVEL_1,...".
+	//
+	// Notes:
+	//
+	//  - these levels do not respect the root level (SRC_LOG_LEVEL), so this
+	//    allows operators to turn up the verbosity of specific logs.
+	//  - this only affects the outputcore (ie will not effect sentrycore).
+	//  - Scope matches the full scope name. IE the below example has the scope
+	//    "foo.bar" not "bar".
+	//
+	//    log.Scoped("foo", "").Scoped("bar", "")
+	EnvLogScopeLevel = "SRC_LOG_SCOPE_LEVEL"
 	// EnvLogSamplingInitial is key of the environment variable that can be used to set
 	// the number of entries with identical messages to always output per second.
 	//
