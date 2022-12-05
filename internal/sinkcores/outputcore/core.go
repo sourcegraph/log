@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/sourcegraph/log/internal/encoders"
+	"github.com/sourcegraph/log/internal/globallogger"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -11,7 +12,7 @@ import (
 func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format encoders.OutputFormat, sampling zap.SamplingConfig, overrides []Override) zapcore.Core {
 	newCore := func(level zapcore.LevelEnabler) zapcore.Core {
 		return zapcore.NewCore(
-			encoders.BuildEncoder(format, false),
+			encoders.BuildEncoder(format, globallogger.DevMode()),
 			output,
 			level,
 		)
