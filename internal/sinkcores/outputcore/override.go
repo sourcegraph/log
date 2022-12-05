@@ -55,6 +55,9 @@ type overrideCore struct {
 	overrides []Override
 }
 
+// Level returns the level after lowering due to overrides. We need to return
+// the lowest possible level since child cores will shortcut based on this
+// level.
 func (c *overrideCore) Level() zapcore.Level {
 	return zapcore.LevelOf(c.Core)
 }
