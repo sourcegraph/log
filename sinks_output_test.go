@@ -148,6 +148,6 @@ func unsetenv(t *testing.T, key string) {
 	}
 	os.Unsetenv(key)
 	t.Cleanup(func() {
-		t.Setenv(key, v)
+		os.Setenv(key, v)
 	})
 }
