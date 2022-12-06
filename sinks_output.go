@@ -43,7 +43,7 @@ func (s *outputSink) build() (zapcore.Core, error) {
 		return nil, err
 	}
 
-	return outputcore.NewCore(output, level, format, sampling, overrides), nil
+	return outputcore.NewCore(output, level, format, sampling, overrides, s.development), nil
 }
 
 // update is a no-op because outputSink cannot be changed live.

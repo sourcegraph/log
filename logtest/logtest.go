@@ -58,7 +58,7 @@ func initGlobal(level zapcore.Level) {
 	if err != nil {
 		panic(err)
 	}
-	core := outputcore.NewCore(output, level, encoders.OutputConsole, zap.SamplingConfig{}, nil)
+	core := outputcore.NewCore(output, level, encoders.OutputConsole, zap.SamplingConfig{}, nil, true)
 	// use an empty resource, we don't log output Resource in dev mode anyway
 	globallogger.Init(log.Resource{}, true, []zapcore.Core{core})
 }
@@ -102,7 +102,7 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 		return outputcore.NewCore(&testingWriter{
 			t:          t,
 			markFailed: options.FailOnErrorLogs,
-		}, level, encoders.OutputConsole, zap.SamplingConfig{}, nil)
+		}, level, encoders.OutputConsole, zap.SamplingConfig{}, nil, true)
 	})
 }
 
