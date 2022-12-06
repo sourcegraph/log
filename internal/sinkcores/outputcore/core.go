@@ -8,10 +8,17 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func NewCore(output zapcore.WriteSyncer, level zapcore.LevelEnabler, format encoders.OutputFormat, sampling zap.SamplingConfig, overrides []Override) zapcore.Core {
+func NewCore(
+	output zapcore.WriteSyncer,
+	level zapcore.LevelEnabler,
+	format encoders.OutputFormat,
+	sampling zap.SamplingConfig,
+	overrides []Override,
+	development bool,
+) zapcore.Core {
 	newCore := func(level zapcore.LevelEnabler) zapcore.Core {
 		return zapcore.NewCore(
-			encoders.BuildEncoder(format, false),
+			encoders.BuildEncoder(format, development),
 			output,
 			level,
 		)
