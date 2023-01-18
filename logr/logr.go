@@ -33,15 +33,17 @@ func (s LogSink) Enabled(level int) bool {
 // only be called when Enabled(level) is true. See Logger.Info for more
 // details.
 func (s LogSink) Info(level int, msg string, keysAndValues ...interface{}) {
-	fields := makeLogFields(keysAndValues)
+	fields := toLogFields(keysAndValues)
 	zl := toZapLevel(level)
-	if zl >= zapcore.ErrorLevel {
+
+	switch {
+	case zl >= zapcore.ErrorLevel:
 		s.Logger.Error(msg, fields...)
-	} else if zl == zapcore.WarnLevel {
+	case zl == zapcore.WarnLevel:
 		s.Logger.Warn(msg, fields...)
-	} else if zl == zapcore.InfoLevel {
+	case zl == zapcore.InfoLevel:
 		s.Logger.Info(msg, fields...)
-	} else {
+	default:
 		s.Logger.Debug(msg, fields...)
 	}
 }
@@ -49,14 +51,14 @@ func (s LogSink) Info(level int, msg string, keysAndValues ...interface{}) {
 // Error logs an error, with the given message and key/value pairs as
 // context.  See Logger.Error for more details.
 func (s LogSink) Error(err error, msg string, keysAndValues ...interface{}) {
-	fields := makeLogFields(keysAndValues)
+	fields := toLogFields(keysAndValues)
 	s.Logger.Error(msg, append(fields, log.Error(err))...)
 }
 
 // WithValues returns a new LogSink with additional key/value pairs.  See
 // Logger.WithValues for more details.
 func (s LogSink) WithValues(keysAndValues ...interface{}) logr.LogSink {
-	return &LogSink{s.Logger.With(makeLogFields(keysAndValues)...)}
+	return &LogSink{s.Logger.With(toLogFields(keysAndValues)...)}
 }
 
 // WithName returns a new LogSink with the specified name appended.  See

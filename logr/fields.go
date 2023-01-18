@@ -5,7 +5,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func makeLogFields(keysAndValues []any) []log.Field {
+func toLogFields(keysAndValues []any) []log.Field {
 	fields := make([]log.Field, 0, len(keysAndValues))
 	for i := 0; i < len(keysAndValues); i += 2 {
 		fields = append(fields,

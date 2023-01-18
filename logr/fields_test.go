@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestMakeLogFields(t *testing.T) {
-	fields := makeLogFields([]any{
+func TestToLogFields(t *testing.T) {
+	fields := toLogFields([]any{
 		"hello", "world",
 		"goodbye", "bob",
 	})
