@@ -32,7 +32,7 @@ func (s LogSink) Enabled(level int) bool {
 // The level argument is provided for optional logging.  This method will
 // only be called when Enabled(level) is true. See Logger.Info for more
 // details.
-func (s LogSink) Info(level int, msg string, keysAndValues ...interface{}) {
+func (s LogSink) Info(level int, msg string, keysAndValues ...any) {
 	fields := toLogFields(keysAndValues)
 	zl := toZapLevel(level)
 
@@ -50,7 +50,7 @@ func (s LogSink) Info(level int, msg string, keysAndValues ...interface{}) {
 
 // Error logs an error, with the given message and key/value pairs as
 // context.  See Logger.Error for more details.
-func (s LogSink) Error(err error, msg string, keysAndValues ...interface{}) {
+func (s LogSink) Error(err error, msg string, keysAndValues ...any) {
 	fields := toLogFields(keysAndValues)
 	s.Logger.Error(msg, append(fields, log.Error(err))...)
 }
