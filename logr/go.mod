@@ -6,7 +6,7 @@ replace github.com/sourcegraph/log => ../
 
 require (
 	github.com/go-logr/logr v1.2.3
-	github.com/sourcegraph/log v0.0.0-00010101000000-000000000000
+	github.com/sourcegraph/log v0.0.0-20230118185536-8e43a48b83a9
 	github.com/stretchr/testify v1.8.0
 	go.uber.org/zap v1.24.0
 )
