@@ -7,6 +7,10 @@ import (
 	"github.com/sourcegraph/log"
 )
 
+// New instantiates a new logr.Logger that sends entries to the given
+// log.Logger.
+func New(l log.Logger) logr.Logger { return logr.New(&LogSink{Logger: l}) }
+
 // LogSink implements logr.LogSink, backed by a sourcegraph/log.Logger.
 type LogSink struct{ log.Logger }
 
