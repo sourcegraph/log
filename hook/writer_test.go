@@ -1,11 +1,12 @@
 package hook_test
 
 import (
-	"bytes"
-	"strings"
 	"testing"
 
 	"github.com/hexops/autogold/v2"
+	"github.com/stretchr/testify/require"
+	"go.bobheadxi.dev/streamline/jq"
+	"go.bobheadxi.dev/streamline/pipe"
 
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/hook"
@@ -16,22 +17,28 @@ import (
 func TestWriter(t *testing.T) {
 	logger, exportLogs := logtest.Captured(t)
 
-	var output bytes.Buffer
-	hookedLogger := hook.Writer(logger, &output, log.LevelWarn, encoders.OutputJSON)
+	writer, stream := pipe.NewStream()
+	hookedLogger := hook.Writer(logger, writer, log.LevelWarn, encoders.OutputJSON)
 
-	hookedLogger.Debug("debug")
-	hookedLogger.Warn("warn")
-	hookedLogger.Error("error")
+	hookedLogger.Debug("debug message")
+	hookedLogger.Warn("warn message")
+	hookedLogger.Error("error message")
 
-	logger.Error("parent")
+	logger.Error("parent message")
+
+	// done with writing
+	writer.CloseWithError(nil)
 
 	// hooked logger output - only warn and above, and messages logged to parent is not
-	// included
-	autogold.Expect([]string{
-		`{"SeverityText":"WARN","Timestamp":1675380599980541000,"InstrumentationScope":"TestWriter","Caller":"hook/writer_test.go:23","Function":"github.com/sourcegraph/log/hook_test.TestWriter","Body":"warn"}`,
-		`{"SeverityText":"ERROR","Timestamp":1675380599980612000,"InstrumentationScope":"TestWriter","Caller":"hook/writer_test.go:24","Function":"github.com/sourcegraph/log/hook_test.TestWriter","Body":"error"}`,
-	}).Equal(t, strings.Split(strings.TrimSpace(output.String()), "\n"))
+	// included. We only get the messages because there's no easy way to mock the clock.
+	hookedOutput, err := stream.WithPipeline(jq.Pipeline(".Body")).Lines()
+	require.NoError(t, err)
+	autogold.Expect([]string{`"warn message"`, `"error message"`}).Equal(t, hookedOutput)
 
 	// parent logger output - should receive everything
-	autogold.Expect([]string{"debug", "warn", "error", "parent"}).Equal(t, exportLogs().Messages())
+	parentOutput := exportLogs().Messages()
+	autogold.Expect([]string{
+		"debug message", "warn message", "error message",
+		"parent message",
+	}).Equal(t, parentOutput)
 }
