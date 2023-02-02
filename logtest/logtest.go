@@ -71,6 +71,17 @@ type CapturedLog struct {
 	Fields  map[string]interface{}
 }
 
+type CapturedLogs []CapturedLog
+
+// Messages aggregates all messages (excluding fields) from the captured log entries.
+func (cl CapturedLogs) Messages() []string {
+	var messages []string
+	for _, l := range cl {
+		messages = append(messages, l.Message)
+	}
+	return messages
+}
+
 type LoggerOptions struct {
 	// Level configures the minimum log level to output.
 	Level log.Level
@@ -123,7 +134,7 @@ func ScopedWith(t testing.TB, options LoggerOptions) log.Logger {
 
 // Captured retrieves a logger from scoped to the the given test, and returns a callback,
 // dumpLogs, which flushes the logger buffer and returns log entries.
-func Captured(t testing.TB) (logger log.Logger, exportLogs func() []CapturedLog) {
+func Captured(t testing.TB) (logger log.Logger, exportLogs func() CapturedLogs) {
 	// Cast into internal APIs
 	cl := configurable.Cast(scopedTestLogger(t, LoggerOptions{}))
 
@@ -133,7 +144,7 @@ func Captured(t testing.TB) (logger log.Logger, exportLogs func() []CapturedLog)
 		return zapcore.NewTee(c, observerCore)
 	})
 
-	return logger, func() []CapturedLog {
+	return logger, func() CapturedLogs {
 		observerCore.Sync()
 
 		entries := entries.TakeAll()
