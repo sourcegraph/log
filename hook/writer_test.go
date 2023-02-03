@@ -10,7 +10,6 @@ import (
 
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/hook"
-	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/logtest"
 )
 
@@ -18,7 +17,7 @@ func TestWriter(t *testing.T) {
 	logger, exportLogs := logtest.Captured(t)
 
 	writer, stream := pipe.NewStream()
-	hookedLogger := hook.Writer(logger, writer, log.LevelWarn, encoders.OutputJSON)
+	hookedLogger := hook.Writer(logger, writer, log.LevelWarn, "json")
 
 	hookedLogger.Debug("debug message")
 	hookedLogger.Warn("warn message")

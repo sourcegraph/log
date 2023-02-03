@@ -13,9 +13,14 @@ var (
 	EnvDevelopment = globallogger.EnvDevelopment
 	// EnvLogFormat is key of the environment variable that is used to set the log format
 	// on Init.
+	//
+	// The value should be one of 'json' or 'console', defaulting to 'json'.
 	EnvLogFormat = "SRC_LOG_FORMAT"
 	// EnvLogLevel is key of the environment variable that can be used to set the log
 	// level on Init.
+	//
+	// The value is one of 'debug', 'info', 'warn', 'error', or 'none', defaulting to
+	// 'warn'.
 	EnvLogLevel = "SRC_LOG_LEVEL"
 	// EnvLogScopeLevel is key of the environment variable that can be used to
 	// override the log level for specific scopes and its children.
