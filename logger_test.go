@@ -11,7 +11,7 @@ import (
 	"github.com/sourcegraph/log/logtest"
 )
 
-func newTestLogger(t *testing.T) (log.Logger, func() []logtest.CapturedLog) {
+func newTestLogger(t *testing.T) (log.Logger, func() logtest.CapturedLogs) {
 	logger, exportLogs := logtest.Captured(t)
 	assert.NotNil(t, logger)
 

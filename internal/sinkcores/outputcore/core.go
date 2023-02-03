@@ -3,15 +3,17 @@ package outputcore
 import (
 	"time"
 
-	"github.com/sourcegraph/log/internal/encoders"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+
+	"github.com/sourcegraph/log/internal/encoders"
+	"github.com/sourcegraph/log/output"
 )
 
 func NewCore(
 	output zapcore.WriteSyncer,
 	level zapcore.LevelEnabler,
-	format encoders.OutputFormat,
+	format output.Format,
 	sampling zap.SamplingConfig,
 	overrides []Override,
 	development bool,

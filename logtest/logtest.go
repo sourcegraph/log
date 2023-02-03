@@ -12,10 +12,10 @@ import (
 
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/internal/configurable"
-	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/internal/sinkcores/outputcore"
 	"github.com/sourcegraph/log/internal/stderr"
+	"github.com/sourcegraph/log/output"
 )
 
 // stdTestInit guards the initialization of the standard library testing package.
@@ -54,11 +54,11 @@ func InitWithLevel(_ *testing.M, level log.Level) {
 
 func initGlobal(level zapcore.Level) {
 	// send output from package-scope loggers to stderr (we can't write to testing here)
-	output, err := stderr.Open()
+	w, err := stderr.Open()
 	if err != nil {
 		panic(err)
 	}
-	core := outputcore.NewCore(output, level, encoders.OutputConsole, zap.SamplingConfig{}, nil, true)
+	core := outputcore.NewCore(w, level, output.FormatConsole, zap.SamplingConfig{}, nil, true)
 	// use an empty resource, we don't log output Resource in dev mode anyway
 	globallogger.Init(log.Resource{}, true, []zapcore.Core{core})
 }
@@ -69,6 +69,17 @@ type CapturedLog struct {
 	Level   log.Level
 	Message string
 	Fields  map[string]interface{}
+}
+
+type CapturedLogs []CapturedLog
+
+// Messages aggregates all messages (excluding fields) from the captured log entries.
+func (cl CapturedLogs) Messages() []string {
+	var messages []string
+	for _, l := range cl {
+		messages = append(messages, l.Message)
+	}
+	return messages
 }
 
 type LoggerOptions struct {
@@ -102,7 +113,7 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 		return outputcore.NewCore(&testingWriter{
 			t:          t,
 			markFailed: options.FailOnErrorLogs,
-		}, level, encoders.OutputConsole, zap.SamplingConfig{}, nil, true)
+		}, level, output.FormatConsole, zap.SamplingConfig{}, nil, true)
 	})
 }
 
@@ -123,7 +134,7 @@ func ScopedWith(t testing.TB, options LoggerOptions) log.Logger {
 
 // Captured retrieves a logger from scoped to the the given test, and returns a callback,
 // dumpLogs, which flushes the logger buffer and returns log entries.
-func Captured(t testing.TB) (logger log.Logger, exportLogs func() []CapturedLog) {
+func Captured(t testing.TB) (logger log.Logger, exportLogs func() CapturedLogs) {
 	// Cast into internal APIs
 	cl := configurable.Cast(scopedTestLogger(t, LoggerOptions{}))
 
@@ -133,7 +144,7 @@ func Captured(t testing.TB) (logger log.Logger, exportLogs func() []CapturedLog)
 		return zapcore.NewTee(c, observerCore)
 	})
 
-	return logger, func() []CapturedLog {
+	return logger, func() CapturedLogs {
 		observerCore.Sync()
 
 		entries := entries.TakeAll()
