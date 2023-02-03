@@ -28,7 +28,7 @@ func TestWriter(t *testing.T) {
 	// done with writing
 	writer.CloseWithError(nil)
 
-	// hooked logger output - only warn and above, and messages logged to parent is not
+	// hooked logger output - only warn and above, and messages logged to parent are not
 	// included. We only get the messages because there's no easy way to mock the clock.
 	hookedOutput, err := stream.WithPipeline(jq.Pipeline(".Body")).Lines()
 	require.NoError(t, err)
