@@ -82,6 +82,28 @@ func (cl CapturedLogs) Messages() []string {
 	return messages
 }
 
+// Filter returns captured logs that match the condition.
+func (cl CapturedLogs) Filter(condition func(l CapturedLog) bool) CapturedLogs {
+	var filtered CapturedLogs
+	for _, l := range cl {
+		if condition(l) {
+			filtered = append(filtered, l)
+		}
+	}
+	return filtered
+}
+
+// Contains asserts that at least one entry matching the condition exists in the captured
+// logs.
+func (cl CapturedLogs) Contains(condition func(l CapturedLog) bool) bool {
+	for _, l := range cl {
+		if condition(l) {
+			return true
+		}
+	}
+	return false
+}
+
 type LoggerOptions struct {
 	// Level configures the minimum log level to output.
 	Level log.Level
