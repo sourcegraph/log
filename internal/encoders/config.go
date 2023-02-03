@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/fatih/color"
+	"github.com/sourcegraph/log/output"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -63,16 +64,16 @@ func applyDevConfig(cfg zapcore.EncoderConfig) zapcore.EncoderConfig {
 	return cfg
 }
 
-func BuildEncoder(format OutputFormat, development bool) (enc zapcore.Encoder) {
+func BuildEncoder(format output.Format, development bool) (enc zapcore.Encoder) {
 	config := OpenTelemetryConfig
 	if development {
 		config = applyDevConfig(config)
 	}
 
 	switch format {
-	case OutputConsole:
+	case output.FormatConsole:
 		return zapcore.NewConsoleEncoder(config)
-	case OutputJSON:
+	case output.FormatJSON:
 		return zapcore.NewJSONEncoder(config)
 	default:
 		panic("unknown output format")

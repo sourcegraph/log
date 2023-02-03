@@ -9,9 +9,9 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/sinkcores/outputcore"
 	"github.com/sourcegraph/log/internal/stderr"
+	"github.com/sourcegraph/log/output"
 )
 
 type outputSink struct {
@@ -21,16 +21,16 @@ type outputSink struct {
 func (s *outputSink) Name() string { return "OutputSink" }
 
 func (s *outputSink) build() (zapcore.Core, error) {
-	output, err := stderr.Open()
+	w, err := stderr.Open()
 	if err != nil {
 		return nil, err
 	}
 
 	level := zap.NewAtomicLevelAt(Level(os.Getenv(EnvLogLevel)).Parse())
-	format := encoders.ParseOutputFormat(os.Getenv(EnvLogFormat))
+	format := output.ParseFormat(os.Getenv(EnvLogFormat))
 
 	if s.development {
-		format = encoders.OutputConsole
+		format = output.FormatConsole
 	}
 
 	sampling, err := parseSamplingConfig()
@@ -43,7 +43,7 @@ func (s *outputSink) build() (zapcore.Core, error) {
 		return nil, err
 	}
 
-	return outputcore.NewCore(output, level, format, sampling, overrides, s.development), nil
+	return outputcore.NewCore(w, level, format, sampling, overrides, s.development), nil
 }
 
 // update is a no-op because outputSink cannot be changed live.

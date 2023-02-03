@@ -12,10 +12,10 @@ import (
 
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/internal/configurable"
-	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/globallogger"
 	"github.com/sourcegraph/log/internal/sinkcores/outputcore"
 	"github.com/sourcegraph/log/internal/stderr"
+	"github.com/sourcegraph/log/output"
 )
 
 // stdTestInit guards the initialization of the standard library testing package.
@@ -54,11 +54,11 @@ func InitWithLevel(_ *testing.M, level log.Level) {
 
 func initGlobal(level zapcore.Level) {
 	// send output from package-scope loggers to stderr (we can't write to testing here)
-	output, err := stderr.Open()
+	w, err := stderr.Open()
 	if err != nil {
 		panic(err)
 	}
-	core := outputcore.NewCore(output, level, encoders.OutputConsole, zap.SamplingConfig{}, nil, true)
+	core := outputcore.NewCore(w, level, output.FormatConsole, zap.SamplingConfig{}, nil, true)
 	// use an empty resource, we don't log output Resource in dev mode anyway
 	globallogger.Init(log.Resource{}, true, []zapcore.Core{core})
 }
@@ -113,7 +113,7 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 		return outputcore.NewCore(&testingWriter{
 			t:          t,
 			markFailed: options.FailOnErrorLogs,
-		}, level, encoders.OutputConsole, zap.SamplingConfig{}, nil, true)
+		}, level, output.FormatConsole, zap.SamplingConfig{}, nil, true)
 	})
 }
 

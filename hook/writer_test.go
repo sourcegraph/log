@@ -11,13 +11,14 @@ import (
 	"github.com/sourcegraph/log"
 	"github.com/sourcegraph/log/hook"
 	"github.com/sourcegraph/log/logtest"
+	"github.com/sourcegraph/log/output"
 )
 
 func TestWriter(t *testing.T) {
 	logger, exportLogs := logtest.Captured(t)
 
 	writer, stream := pipe.NewStream()
-	hookedLogger := hook.Writer(logger, writer, log.LevelWarn, "json")
+	hookedLogger := hook.Writer(logger, writer, log.LevelWarn, output.FormatJSON)
 
 	hookedLogger.Debug("debug message")
 	hookedLogger.Warn("warn message")

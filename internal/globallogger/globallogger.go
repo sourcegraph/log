@@ -12,6 +12,7 @@ import (
 
 	"github.com/sourcegraph/log/internal/encoders"
 	"github.com/sourcegraph/log/internal/otelfields"
+	"github.com/sourcegraph/log/internal/stderr"
 )
 
 var (
@@ -71,7 +72,7 @@ func (f *forceSyncer) OnWrite(_ *zapcore.CheckedEntry, _ []zapcore.Field) {
 }
 
 func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
-	internalErrsSink, err := openStderr()
+	internalErrsSink, err := stderr.Open()
 	if err != nil {
 		panic(err.Error())
 	}
@@ -100,12 +101,4 @@ func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *
 		r.InstanceID = uuid.New().String()
 	}
 	return logger.With(zap.Object(otelfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: r}))
-}
-
-func openStderr() (zapcore.WriteSyncer, error) {
-	errSink, _, err := zap.Open("stderr")
-	if err != nil {
-		return nil, err
-	}
-	return errSink, nil
 }
