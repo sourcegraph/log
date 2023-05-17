@@ -30,7 +30,6 @@ type SinksConfigGetter func() SinksConfig
 func (s sinks) update(get SinksConfigGetter) func() {
 	return func() {
 		updated := get()
-
 		for _, sink := range s {
 			if err := sink.update(updated); err != nil {
 				Scoped("log.sinks.update", "configuration updates").

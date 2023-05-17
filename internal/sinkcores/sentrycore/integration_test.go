@@ -89,17 +89,23 @@ func TestTags(t *testing.T) {
 		assert.Equal(t, tr.Events()[0].Tags["scope"], "TestTags/scope.my-scope")
 	})
 
-	t.Run("service_name", func(t *testing.T) {
+	t.Run("resource", func(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		resource := log.Resource{
-			Name:    "foobar",
-			Version: "123",
+			Name:       "foobar",
+			Version:    "123",
+			InstanceID: "hostname",
 		}
 		logger.Error("msg", log.Error(e), zap.Object(otelfields.ResourceFieldKey, &encoders.ResourceEncoder{Resource: resource}))
 		sync()
 		assert.Len(t, tr.Events(), 1)
-		assert.Equal(t, tr.Events()[0].Tags["resource.service.name"], "foobar")
-		assert.Equal(t, tr.Events()[0].Tags["resource.service.version"], "123")
+		assert.Equal(t, "foobar", tr.Events()[0].Tags["resource.service.name"])
+
+		assert.Equal(t, "123", tr.Events()[0].Tags["resource.service.version"])
+		assert.Equal(t, "123", tr.Events()[0].Release)
+
+		assert.Equal(t, "hostname", tr.Events()[0].Tags["resource.service.instance.id"])
+		assert.Equal(t, "hostname", tr.Events()[0].ServerName)
 	})
 }
 

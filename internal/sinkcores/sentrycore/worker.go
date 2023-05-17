@@ -137,12 +137,15 @@ func (w *worker) capture(errCtx *errorContext) {
 				tags["resource.service.name"] = r.Name
 				if r.Version != "" {
 					tags["resource.service.version"] = r.Version
+					event.Release = r.Version
 				}
 				if r.Namespace != "" {
 					tags["resource.service.namespace"] = r.Namespace
+					event.Environment = r.Namespace
 				}
 				if r.InstanceID != "" {
 					tags["resource.service.instance.id"] = r.InstanceID
+					event.ServerName = r.InstanceID
 				}
 			}
 		}
