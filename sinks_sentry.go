@@ -48,7 +48,8 @@ func (s *sentrySink) build() (zapcore.Core, error) {
 
 func (s *sentrySink) update(updated SinksConfig) error {
 	if updated.Sentry == nil {
-		return nil
+		// use zero-value, effectively disabling sentry next
+		updated.Sentry = &SentrySink{}
 	}
 
 	if cmp.Equal(s.ClientOptions, updated.Sentry.ClientOptions) {
