@@ -131,7 +131,7 @@ func TestWithTrace(t *testing.T) {
 	logger.WithTrace(tc).With(log.Error(a)).Error("msg")
 	sync()
 	assert.Len(t, tr.Events(), 1)
-	attrs := tr.Events()[0].Contexts["log"].(map[string]interface{})
+	attrs := tr.Events()[0].Contexts["log"]
 	assert.Equal(t, "123", attrs["TraceId"])
 	assert.Equal(t, "456", attrs["SpanId"])
 }
@@ -144,7 +144,7 @@ func TestFields(t *testing.T) {
 		}
 		e := tr.Events()[0]
 		assert.IsType(t, map[string]interface{}{}, e.Contexts["log"])
-		cb(tr.Events()[0].Contexts["log"].(map[string]interface{}))
+		cb(tr.Events()[0].Contexts["log"])
 	}
 	e := errors.New("test error")
 
