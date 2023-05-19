@@ -116,7 +116,17 @@ func (w *worker) capture(errCtx *errorContext) {
 		// description. And of course we include the scope, because we want to promote
 		// its use as ways to identify and understand the context of observability
 		// elements.
-		event.Exception[0].Type = fmt.Sprintf("[%s] %s: %s",
+		//
+		// HOWEVER!!!! It turns out when Sentry says "first exception" it ACTUALLY means
+		// the LAST exception:
+		//
+		// 	// Note that "first exception" is the last item in the slice,
+		// 	// because... Sentry is annoying.
+		//
+		// Source: https://github.com/cockroachdb/errors/blob/26622367a22260fa287d2f7aa2a085b0324c74ee/report/report.go#L324-L325
+		// We've observed this behaviour in practice as well. So here, make sure we are
+		// overwriting Type on the LAST exception instead of the first.
+		event.Exception[len(event.Exception)-1].Type = fmt.Sprintf("[%s] %s: %s",
 			errCtx.Scope, errCtx.Message, errors.Cause(errCtx.Error).Error())
 	}
 
