@@ -134,5 +134,5 @@ func NamedError(key string, err error) Field {
 	if err == nil {
 		return String(key, "<nil>")
 	}
-	return zap.NamedError(key, &encoders.ErrorEncoder{Source: err})
+	return zap.Inline(&encoders.ErrorEncoder{Key: key, Source: err})
 }

@@ -90,13 +90,12 @@ func (c *Core) clone() *Core {
 func (c *Core) With(fields []zapcore.Field) zapcore.Core {
 	c = c.clone()
 	for _, f := range fields {
-		if f.Type == zapcore.ErrorType {
-			// Get original error, which we wrap on ErrorEncoder in log.Error
-			if enc, ok := f.Interface.(*encoders.ErrorEncoder); ok {
-				c.errs = append(c.errs, enc.Source)
-				continue
-			}
+		// Get original error, which we wrap on ErrorEncoder in log.Error
+		if err, ok := encoders.IsErrorEncoder(f); ok {
+			c.errs = append(c.errs, err)
+			continue
 		}
+		// Retain rest of fields as-is
 		c.base.Fields = append(c.base.Fields, f)
 	}
 	return c
@@ -120,22 +119,20 @@ func (c *Core) Write(entry zapcore.Entry, fields []zapcore.Field) error {
 	base.Message = entry.Message
 	base.Level = entry.Level
 
-	errs := make([]error, len(c.errs))
-	copy(errs, c.errs)
+	entryErrs := make([]error, len(c.errs))
+	copy(entryErrs, c.errs)
 
 	for _, f := range fields {
-		if f.Type == zapcore.ErrorType {
-			if enc, ok := f.Interface.(*encoders.ErrorEncoder); ok {
-				// If we find one of our errors, we remove it from the fields so our error reports are not including
-				// their own error as an attribute, which would a useless repetition.
-				errs = append(errs, enc.Source)
-				continue
-			}
+		// Get original error, which we wrap on ErrorEncoder in log.Error
+		if err, ok := encoders.IsErrorEncoder(f); ok {
+			entryErrs = append(entryErrs, err)
+			continue
 		}
+		// Retain rest of fields as-is
 		base.Fields = append(base.Fields, f)
 	}
 
-	for _, err := range errs {
+	for _, err := range entryErrs {
 		errC := errorContext{baseContext: base, Error: err}
 		select {
 		case c.w.C <- &errC:

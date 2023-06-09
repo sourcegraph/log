@@ -64,18 +64,47 @@ func applyDevConfig(cfg zapcore.EncoderConfig) zapcore.EncoderConfig {
 	return cfg
 }
 
-func BuildEncoder(format output.Format, development bool) (enc zapcore.Encoder) {
+type EncoderOptions struct {
+	// Development enables options for dev environments
+	Development bool
+
+	// RedactErrors enables redaction of error fields, assuming the usage of
+	// cockroachdb/errors
+	RedactErrors bool
+}
+
+func BuildEncoder(format output.Format, opts EncoderOptions) (enc zapcore.Encoder) {
 	config := OpenTelemetryConfig
-	if development {
+	if opts.Development {
 		config = applyDevConfig(config)
 	}
 
+	var e zapcore.Encoder
 	switch format {
 	case output.FormatConsole:
-		return zapcore.NewConsoleEncoder(config)
+		e = zapcore.NewConsoleEncoder(config)
 	case output.FormatJSON:
-		return zapcore.NewJSONEncoder(config)
+		e = zapcore.NewJSONEncoder(config)
 	default:
 		panic("unknown output format")
+	}
+
+	// TODO: This doesn't work, somewhere deep inside zap we lose our wrapper
+	// when the error is encoded. We could just use a env var to control this
+	return &encoderWithOptions{
+		Encoder:      e,
+		RedactErrors: opts.RedactErrors,
+	}
+}
+
+type encoderWithOptions struct {
+	zapcore.Encoder
+	RedactErrors bool
+}
+
+func (e *encoderWithOptions) Clone() zapcore.Encoder {
+	return &encoderWithOptions{
+		Encoder:      e.Encoder.Clone(),
+		RedactErrors: e.RedactErrors,
 	}
 }

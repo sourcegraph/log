@@ -20,7 +20,10 @@ func NewCore(
 ) zapcore.Core {
 	newCore := func(level zapcore.LevelEnabler) zapcore.Core {
 		return zapcore.NewCore(
-			encoders.BuildEncoder(format, development),
+			encoders.BuildEncoder(format, encoders.EncoderOptions{
+				Development:  development,
+				RedactErrors: false, // TODO: prop-drill from somewhere
+			}),
 			output,
 			level,
 		)

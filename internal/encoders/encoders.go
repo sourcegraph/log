@@ -1,8 +1,11 @@
 package encoders
 
 import (
+	"fmt"
+
 	"go.uber.org/zap/zapcore"
 
+	"github.com/cockroachdb/redact"
 	"github.com/sourcegraph/log/internal/otelfields"
 )
 
@@ -57,9 +60,29 @@ func (fields FieldsObjectEncoder) MarshalLogObject(enc zapcore.ObjectEncoder) er
 }
 
 type ErrorEncoder struct {
+	Key    string
 	Source error
 }
 
-func (l *ErrorEncoder) Error() string {
-	return l.Source.Error()
+var _ zapcore.ObjectMarshaler = &FieldsObjectEncoder{}
+
+func IsErrorEncoder(f zapcore.Field) (error, bool) {
+	if f.Type != zapcore.InlineMarshalerType {
+		return nil, false
+	}
+	if e, ok := f.Interface.(*ErrorEncoder); ok {
+		return e.Source, ok
+	}
+	return nil, false
+}
+
+func (e *ErrorEncoder) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	fmt.Printf("%T\n", enc)
+
+	if opts, ok := enc.(*encoderWithOptions); ok && opts.RedactErrors {
+		enc.AddString(e.Key, redact.Sprintf("%v", e.Source).Redact().StripMarkers())
+	} else {
+		enc.AddString(e.Key, e.Source.Error())
+	}
+	return nil
 }
