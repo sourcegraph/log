@@ -14,7 +14,7 @@ var (
 	// EnvLogFormat is key of the environment variable that is used to set the log format
 	// on Init.
 	//
-	// The value should be one of 'json' or 'console', defaulting to 'json'.
+	// The value should be one of 'json', 'json_gcp' or 'condensed', defaulting to 'json'.
 	EnvLogFormat = "SRC_LOG_FORMAT"
 	// EnvLogLevel is key of the environment variable that can be used to set the log
 	// level on Init.
