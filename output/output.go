@@ -7,6 +7,10 @@ const (
 	// FormatJSON encodes log entries to a machine-readable, OpenTelemetry-structured
 	// format.
 	FormatJSON Format = "json"
+	// FormatJSONGCP encodes log entries to a machine-readable, GCP-structured format.
+	// It's similar to OpenTelemetry-structured format, but the severity field
+	// complies with https://cloud.google.com/logging/docs/structured-logging#special-payload-fields
+	FormatJSONGCP Format = "json_gcp"
 	// FormatConsole encodes log entries to a human-readable format.
 	FormatConsole Format = "console"
 )
@@ -16,16 +20,16 @@ const (
 // log formats.
 func ParseFormat(format string) Format {
 	switch format {
-	case string(FormatJSON),
+	case string(FormatJSONGCP):
+		return FormatJSONGCP
+	case string(FormatJSON), "logfmt":
 		// True 'logfmt' has significant limitations around certain field types:
 		// https://github.com/jsternberg/zap-logfmt#limitations so since it implies a
 		// desire for a somewhat structured format, we interpret it as OutputJSON.
-		"logfmt":
 		return FormatJSON
-	case string(FormatConsole),
+	case string(FormatConsole), "condensed":
 		// The previous 'condensed' format is optimized for local dev, so it serves the
 		// same purpose as OutputConsole
-		"condensed":
 		return FormatConsole
 	}
 
