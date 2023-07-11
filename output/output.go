@@ -22,14 +22,16 @@ func ParseFormat(format string) Format {
 	switch format {
 	case string(FormatJSONGCP):
 		return FormatJSONGCP
+
+	// True 'logfmt' has significant limitations around certain field types:
+	// https://github.com/jsternberg/zap-logfmt#limitations so since it implies a
+	// desire for a somewhat structured format, we interpret it as OutputJSON.
 	case string(FormatJSON), "logfmt":
-		// True 'logfmt' has significant limitations around certain field types:
-		// https://github.com/jsternberg/zap-logfmt#limitations so since it implies a
-		// desire for a somewhat structured format, we interpret it as OutputJSON.
 		return FormatJSON
+
+	// The previous 'condensed' format is optimized for local dev, so it serves the
+	// same purpose as OutputConsole
 	case string(FormatConsole), "condensed":
-		// The previous 'condensed' format is optimized for local dev, so it serves the
-		// same purpose as OutputConsole
 		return FormatConsole
 	}
 
