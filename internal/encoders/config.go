@@ -38,6 +38,31 @@ var OpenTelemetryConfig = zapcore.EncoderConfig{
 	EncodeCaller:   zapcore.ShortCallerEncoder,
 }
 
+var GCPConfig = zapcore.EncoderConfig{
+	NameKey: "InstrumentationScope",
+	// https://cloud.google.com/logging/docs/agent/logging/configuration#timestamp-processing
+	TimeKey:    "timestampNanos",
+	EncodeTime: zapcore.EpochNanosTimeEncoder,
+	// https://cloud.google.com/logging/docs/reference/v2/rest/v2/LogEntry#logseverity
+	// https://cloud.google.com/logging/docs/agent/logging/configuration#special-fields
+	LevelKey:    "severity",
+	EncodeLevel: zapcore.CapitalLevelEncoder, // most levels correspond to the OT level text
+	// https://cloud.google.com/logging/docs/agent/logging/configuration#special-fields
+	MessageKey: "message",
+
+	// These don't really have an equivalent in the OT spec, and we can't stick it under
+	// Attributes because they are top-level traits in Zap, so we just capitalize them and
+	// hope for the best.
+	CallerKey:     "Caller",
+	FunctionKey:   "Function",
+	StacktraceKey: "Stacktrace",
+
+	// Defaults
+	LineEnding:     zapcore.DefaultLineEnding,
+	EncodeDuration: zapcore.SecondsDurationEncoder,
+	EncodeCaller:   zapcore.ShortCallerEncoder,
+}
+
 // applyDevConfig applies options for dev environments to the encoder config
 func applyDevConfig(cfg zapcore.EncoderConfig) zapcore.EncoderConfig {
 	// Nice colors based on log level
@@ -75,6 +100,8 @@ func BuildEncoder(format output.Format, development bool) (enc zapcore.Encoder) 
 		return zapcore.NewConsoleEncoder(config)
 	case output.FormatJSON:
 		return zapcore.NewJSONEncoder(config)
+	case output.FormatJSONGCP:
+		return zapcore.NewJSONEncoder(GCPConfig)
 	default:
 		panic("unknown output format")
 	}
