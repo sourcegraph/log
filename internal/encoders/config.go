@@ -53,9 +53,10 @@ var GCPConfig = zapcore.EncoderConfig{
 	// These don't really have an equivalent in the OT spec, and we can't stick it under
 	// Attributes because they are top-level traits in Zap, so we just capitalize them and
 	// hope for the best.
-	CallerKey:     "Caller",
-	FunctionKey:   "Function",
-	StacktraceKey: "Stacktrace",
+	CallerKey:   "Caller",
+	FunctionKey: "Function",
+	// https://cloud.google.com/error-reporting/docs/formatting-error-messages#log-error
+	StacktraceKey: "stack_trace",
 
 	// Defaults
 	LineEnding:     zapcore.DefaultLineEnding,

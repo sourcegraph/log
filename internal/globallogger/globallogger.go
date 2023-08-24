@@ -41,10 +41,10 @@ func Get(safe bool) *zap.Logger {
 
 // Init initializes the global logger once. Subsequent calls are no-op. Returns the
 // callback to sync the root core.
-func Init(r otelfields.Resource, development bool, sinks []zapcore.Core) func() error {
+func Init(r otelfields.Resource, opt LoggerOption, sinks []zapcore.Core) func() error {
 	globalLoggerInit.Do(func() {
-		devMode = development
-		globalLogger = initLogger(r, development, sinks)
+		devMode = opt.Development
+		globalLogger = initLogger(r, opt, sinks)
 		initialized.Store(true)
 	})
 	return globalLogger.Sync
@@ -62,6 +62,11 @@ type forceSyncer struct {
 	core zapcore.Core
 }
 
+type LoggerOption struct {
+	Development     bool
+	StackTraceLevel zapcore.Level
+}
+
 var _ zapcore.CheckWriteHook = &forceSyncer{}
 
 // OnWrite calls sync on the underlying core and then calls os.Exit(1).
@@ -71,14 +76,14 @@ func (f *forceSyncer) OnWrite(_ *zapcore.CheckedEntry, _ []zapcore.Field) {
 	os.Exit(1)
 }
 
-func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *zap.Logger {
+func initLogger(r otelfields.Resource, opt LoggerOption, sinks []zapcore.Core) *zap.Logger {
 	internalErrsSink, err := stderr.Open()
 	if err != nil {
 		panic(err.Error())
 	}
 
 	options := []zap.Option{zap.ErrorOutput(internalErrsSink), zap.AddCaller()}
-	if development {
+	if opt.Development {
 		options = append(options, zap.Development())
 	}
 
@@ -87,9 +92,14 @@ func initLogger(r otelfields.Resource, development bool, sinks []zapcore.Core) *
 	// Add a forceSyncer on the core to ensure Sync is executed on the underlying core when Fatal is called, since
 	// after Fatal os.Exit is called per default configuration
 	options = append(options, zap.WithFatalHook(&forceSyncer{core}))
+
+	if opt.StackTraceLevel != zapcore.Level(0) {
+		options = append(options, zap.AddStacktrace(opt.StackTraceLevel))
+	}
+
 	logger := zap.New(core, options...)
 
-	if development {
+	if opt.Development {
 		return logger
 	}
 

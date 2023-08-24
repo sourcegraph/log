@@ -24,6 +24,7 @@ func main() {
 		log.EnvLogScopeLevel,
 		log.EnvLogSamplingInitial,
 		log.EnvLogSamplingThereafter,
+		log.EnvLogStackTraceLevel,
 	} {
 		config = append(config, log.String(k, os.Getenv(k)))
 	}
@@ -31,4 +32,5 @@ func main() {
 
 	// sample message
 	l.Warn("hello world!", log.Time("now", time.Now()))
+	l.Error("hello world!", log.Time("now", time.Now()))
 }

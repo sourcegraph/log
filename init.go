@@ -48,6 +48,10 @@ var (
 	//
 	// Defaults to 100 - set explicitly to 0 or -1 to disable.
 	EnvLogSamplingThereafter = "SRC_LOG_SAMPLING_THEREAFTER"
+	// EnvLogStackTraceLevel is a key of the environment variable that can be used to set
+	// the log level to include stack traces on.
+	// Default does not include stack traces on any level.
+	EnvLogStackTraceLevel = "SRC_LOG_STACKTRACE_LEVEL"
 )
 
 type Resource = otelfields.Resource
@@ -94,7 +98,13 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 
 	// Init the logger first, so that we can log the error if needed, before dealing with
 	// sink builder errors
-	sync := globallogger.Init(r, currentDevMode, cores)
+	loggerOption := globallogger.LoggerOption{
+		Development: currentDevMode,
+	}
+	if os.Getenv(EnvLogStackTraceLevel) != "" {
+		loggerOption.StackTraceLevel = Level(os.Getenv(EnvLogStackTraceLevel)).Parse()
+	}
+	sync := globallogger.Init(r, loggerOption, cores)
 
 	if sinksBuildErr != nil {
 		// Log the error
