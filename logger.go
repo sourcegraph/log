@@ -2,7 +2,6 @@ package log
 
 import (
 	"fmt"
-	"sync"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -138,9 +137,6 @@ type zapAdapter struct {
 
 var _ Logger = &zapAdapter{}
 
-// createdScopes tracks the scopes that have been created so far.
-var createdScopes sync.Map
-
 func (z *zapAdapter) Scoped(scope string, description string) Logger {
 	var newFullScope string
 	if z.fullScope == "" {
@@ -148,7 +144,7 @@ func (z *zapAdapter) Scoped(scope string, description string) Logger {
 	} else {
 		newFullScope = createScope(z.fullScope, scope)
 	}
-	scopedLogger := &zapAdapter{
+	return &zapAdapter{
 		// name -> scope in OT
 		Logger:     z.Logger.Named(scope),
 		rootLogger: z.rootLogger.Named(scope),
@@ -156,21 +152,6 @@ func (z *zapAdapter) Scoped(scope string, description string) Logger {
 		fullScope:  newFullScope,
 		attributes: z.attributes,
 	}
-	if len(description) > 0 {
-		if _, alreadyLogged := createdScopes.LoadOrStore(newFullScope, struct{}{}); !alreadyLogged {
-			callerSkip := 1 // Logger.Scoped() -> Logger.Debug()
-			if z.fromPackageScoped {
-				callerSkip += 1 // log.Scoped() -> Logger.Scoped() -> Logger.Debug()
-			}
-			scopedLogger.
-				AddCallerSkip(callerSkip).
-				Debug("logger.scoped",
-					zap.Namespace("scope"),
-					zap.String("name", scope),
-					zap.String("desc", description))
-		}
-	}
-	return scopedLogger
 }
 
 func (z *zapAdapter) With(fields ...Field) Logger {
