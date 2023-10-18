@@ -32,7 +32,7 @@ func (s sinks) update(get SinksConfigGetter) func() {
 		updated := get()
 		for _, sink := range s {
 			if err := sink.update(updated); err != nil {
-				Scoped("log.sinks.update", "configuration updates").
+				Scoped("log.sinks.update").
 					Error("failed to update", String("sink", sink.Name()), Error(err))
 			}
 		}
