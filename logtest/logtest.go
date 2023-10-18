@@ -119,7 +119,7 @@ func scopedTestLogger(t testing.TB, options LoggerOptions) log.Logger {
 	// On cleanup, flush the global logger.
 	t.Cleanup(func() { globallogger.Get(true).Sync() })
 
-	root := log.Scoped(t.Name(), "")
+	root := log.Scoped(t.Name())
 
 	// Cast into internal API
 	cl := configurable.Cast(root)

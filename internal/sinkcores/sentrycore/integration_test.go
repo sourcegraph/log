@@ -82,7 +82,7 @@ func TestTags(t *testing.T) {
 	e := errors.New("test error")
 	t.Run("scope", func(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
-		logger = logger.Scoped("my-scope", "testing scope tags")
+		logger = logger.Scoped("my-scope")
 		logger.Error("msg", log.Error(e))
 		sync()
 		assert.Len(t, tr.Events(), 1)

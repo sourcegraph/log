@@ -14,7 +14,7 @@ func TestCast(t *testing.T) {
 		log.Init(log.Resource{Name: t.Name()})
 
 		// Cast works
-		cl := configurable.Cast(log.Scoped("foo", "bar"))
+		cl := configurable.Cast(log.Scoped("foo"))
 
 		// Core wrapping works
 		_ = cl.WithCore(func(c zapcore.Core) zapcore.Core {

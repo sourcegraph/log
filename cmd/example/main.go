@@ -13,7 +13,7 @@ func main() {
 	})
 	defer liblog.Sync()
 
-	l := log.Scoped("foo", "an example logger")
+	l := log.Scoped("foo")
 
 	// print diagnostics
 	config := []log.Field{}

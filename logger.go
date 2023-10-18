@@ -30,7 +30,7 @@ type Logger interface {
 	//
 	// Scopes map to OpenTelemetry InstrumentationScopes:
 	// https://opentelemetry.io/docs/reference/specification/logs/data-model/#field-instrumentationscope
-	Scoped(scope string, description string) Logger
+	Scoped(scope string) Logger
 
 	// With creates a new Logger with the given fields as attributes.
 	//
@@ -87,7 +87,7 @@ type Logger interface {
 //
 // When testing, you should use 'logtest.Scoped(*testing.T)' instead - learn more:
 // https://docs.sourcegraph.com/dev/how-to/add_logging#testing-usage
-func Scoped(scope string, description string) Logger {
+func Scoped(scope string) Logger {
 	safeGet := !globallogger.DevMode() // do not panic in prod
 	root := globallogger.Get(safeGet)
 	adapted := &zapAdapter{
@@ -99,9 +99,9 @@ func Scoped(scope string, description string) Logger {
 	if globallogger.DevMode() {
 		// In development, don't add the OpenTelemetry "Attributes" namespace which gets
 		// rather difficult to read.
-		return adapted.Scoped(scope, description)
+		return adapted.Scoped(scope)
 	}
-	return adapted.Scoped(scope, description).With(otelfields.AttributesNamespace)
+	return adapted.Scoped(scope).With(otelfields.AttributesNamespace)
 }
 
 // NoOp returns a no-op Logger that can never produce any output. It can be safely created
@@ -137,7 +137,7 @@ type zapAdapter struct {
 
 var _ Logger = &zapAdapter{}
 
-func (z *zapAdapter) Scoped(scope string, description string) Logger {
+func (z *zapAdapter) Scoped(scope string) Logger {
 	var newFullScope string
 	if z.fullScope == "" {
 		newFullScope = scope

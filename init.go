@@ -98,7 +98,7 @@ func Init(r Resource, s ...Sink) *PostInitCallbacks {
 
 	if sinksBuildErr != nil {
 		// Log the error
-		Scoped("log.init", "logger initialization").
+		Scoped("log.init").
 			Fatal("sinks initialization failed", Error(sinksBuildErr))
 	}
 
