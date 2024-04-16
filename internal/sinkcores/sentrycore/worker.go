@@ -189,6 +189,14 @@ func (w *worker) capture(errCtx *errorContext) {
 	w.hub.hub.WithScope(func(scope *sentry.Scope) {
 		scope.SetExtras(extraDetails)
 		scope.SetContext("log", enc.Fields)
+		if enc.Fields != nil {
+			// Also reflect trace into Sentry's specialized trace context
+			// https://develop.sentry.dev/sdk/event-payloads/contexts/#trace-context
+			scope.SetContext("trace", sentry.Context{
+				"trace_id": enc.Fields["TraceId"],
+				"span_id":  enc.Fields["SpanId"],
+			})
+		}
 		scope.SetTags(tags)
 		scope.SetLevel(level)
 		w.hub.hub.CaptureEvent(event)

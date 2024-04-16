@@ -134,6 +134,10 @@ func TestWithTrace(t *testing.T) {
 	attrs := tr.Events()[0].Contexts["log"]
 	assert.Equal(t, "123", attrs["TraceId"])
 	assert.Equal(t, "456", attrs["SpanId"])
+	// Also reflect trace into Sentry's specialized trace context
+	traceAttrs := tr.Events()[0].Contexts["trace"]
+	assert.Equal(t, "123", traceAttrs["trace_id"])
+	assert.Equal(t, "456", traceAttrs["span_id"])
 }
 
 func TestFields(t *testing.T) {
