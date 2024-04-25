@@ -1,8 +1,9 @@
 package logr
 
 import (
-	"github.com/sourcegraph/log"
 	"go.uber.org/zap"
+
+	"github.com/sourcegraph/log"
 )
 
 func toLogFields(keysAndValues []any) []log.Field {

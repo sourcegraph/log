@@ -73,7 +73,7 @@ type Logger interface {
 	// scope. To disable all output, you can use LogLevelNone.
 	//
 	// IncreaseLevel is only allowed to increase the level the Logger was initialized at -
-	// it has no affect if the preset level is higher than the inidcated level.
+	// it has no affect if the preset level is higher than the indicated level.
 	IncreaseLevel(scope string, description string, level Level) Logger
 }
 

@@ -3,8 +3,9 @@ package logr
 import (
 	"testing"
 
-	"github.com/sourcegraph/log/logtest"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/sourcegraph/log/logtest"
 )
 
 func TestGetLogger(t *testing.T) {
