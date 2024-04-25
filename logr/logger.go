@@ -12,7 +12,7 @@ import (
 func GetLogger(l logr.Logger) (log.Logger, bool) {
 	sink, ok := l.GetSink().(*LogSink)
 	if !ok {
-		return log.Scoped("logr", "new log.Logger created from logr.Logger"), false
+		return log.Scoped("logr"), false
 	}
 	return sink.Logger, true
 }

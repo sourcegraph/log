@@ -3,8 +3,9 @@ package logr
 import (
 	"testing"
 
-	"github.com/sourcegraph/log"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/sourcegraph/log"
 )
 
 func TestToLogFields(t *testing.T) {

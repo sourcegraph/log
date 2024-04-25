@@ -68,5 +68,5 @@ func (s LogSink) WithValues(keysAndValues ...any) logr.LogSink {
 // WithName returns a new LogSink with the specified name appended.  See
 // Logger.WithName for more details.
 func (s LogSink) WithName(name string) logr.LogSink {
-	return &LogSink{s.Logger.Scoped(name, "")}
+	return &LogSink{s.Logger.Scoped(name)}
 }
