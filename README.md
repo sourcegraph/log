@@ -7,5 +7,5 @@
 Learn more:
 
 - [Adminstration: Logging](https://docs.sourcegraph.com/admin/observability/logs)
-- [Development: How to add logging](https://docs.sourcegraph.com/dev/how-to/add_logging)
+- [Development: How to add logging](https://sourcegraph.com/github.com/sourcegraph/sourcegraph/-/blob/doc/dev/how-to/add_logging.md)
 - [Package docs](https://pkg.go.dev/github.com/sourcegraph/log)
