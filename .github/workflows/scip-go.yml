@@ -3,6 +3,7 @@ name: scip-go
   push:
     paths:
       - '**.go'
+      - '.github/workflows/scip-go.yml'
 jobs:
   scip-go:
     if: github.repository == 'sourcegraph/log'
