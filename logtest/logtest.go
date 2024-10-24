@@ -154,11 +154,15 @@ func ScopedWith(t testing.TB, options LoggerOptions) log.Logger {
 	return scopedTestLogger(t, options)
 }
 
-// Captured retrieves a logger from scoped to the the given test, and returns a callback,
-// dumpLogs, which flushes the logger buffer and returns log entries.
-func Captured(t testing.TB) (logger log.Logger, exportLogs func() CapturedLogs) {
+// CapturedWith generalizes Captured but allows customizing the logging
+// options for stderr.
+//
+// To suppress logging to stderr, use LoggerOptions{Level: log.LevelNone}.
+//
+// Like Captured, the exportLogs callback still captures logs for every level.
+func CapturedWith(t testing.TB, stderrOptions LoggerOptions) (logger log.Logger, exportLogs func() CapturedLogs) {
 	// Cast into internal APIs
-	cl := configurable.Cast(scopedTestLogger(t, LoggerOptions{}))
+	cl := configurable.Cast(scopedTestLogger(t, stderrOptions))
 
 	observerCore, entries := observer.New(zap.DebugLevel) // capture all levels
 
@@ -182,6 +186,20 @@ func Captured(t testing.TB) (logger log.Logger, exportLogs func() CapturedLogs) 
 		}
 		return logs
 	}
+}
+
+// Captured retrieves a logger scoped to the given test, and returns a callback,
+// exportLogs, which flushes the logger buffer and returns log entries.
+//
+// The logged values are also printed to stderr in test output.
+// The log level for stderr will be Debug if the tests are run
+// in verbose mode, and Warn otherwise.
+//
+// To suppress logging to stderr, use CapturedWith instead.
+//
+// The returned callback exportLogs will return entries for all log levels.
+func Captured(t testing.TB) (logger log.Logger, exportLogs func() CapturedLogs) {
+	return CapturedWith(t, LoggerOptions{})
 }
 
 // NoOp returns a no-op Logger, useful for silencing all output in a specific test.
