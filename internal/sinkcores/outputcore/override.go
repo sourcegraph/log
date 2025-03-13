@@ -71,6 +71,7 @@ func (c *overrideCore) With(fields []zapcore.Field) zapcore.Core {
 }
 
 func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
+
 	// First check if any overrides match this logger
 	for _, o := range c.overrides {
 
@@ -86,7 +87,7 @@ func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapco
 		if o.Level.Enabled(ent.Level) {
 			return c.Core.Check(ent, ce)
 		}
-		break
+		return ce
 	}
 
 	// If no overrides matched or the override allowed it, check the base level
@@ -99,5 +100,6 @@ func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapco
 		return ce
 	}
 
+	// allowed!
 	return c.Core.Check(ent, ce)
 }
