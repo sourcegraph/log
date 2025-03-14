@@ -71,10 +71,7 @@ func (c *overrideCore) With(fields []zapcore.Field) zapcore.Core {
 }
 
 func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-
-	// First check if any overrides match this logger
 	for _, o := range c.overrides {
-
 		if !strings.HasPrefix(ent.LoggerName, o.Scope) {
 			continue
 		}
@@ -83,23 +80,19 @@ func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapco
 			continue
 		}
 
-		// If we found a matching override, use its level check
 		if o.Level.Enabled(ent.Level) {
 			return c.Core.Check(ent, ce)
 		}
 		return ce
 	}
 
-	// If no overrides matched or the override allowed it, check the base level
-	if !c.level.Enabled(ent.Level) {
-		return ce
+	if c.level.Enabled(ent.Level) {
+		return c.Core.Check(ent, ce)
 	}
 
-	// Finally check if the core itself allows this level
 	if !c.Core.Enabled(ent.Level) {
 		return ce
 	}
 
-	// allowed!
-	return c.Core.Check(ent, ce)
+	return ce
 }
