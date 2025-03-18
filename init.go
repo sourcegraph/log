@@ -30,7 +30,7 @@ var (
 	// Notes:
 	//
 	//  - these levels do not respect the root level (SRC_LOG_LEVEL), so this
-	//    allows operators to turn up the verbosity of specific logs.
+	//    allows operators to turn up or down the verbosity of specific logs.
 	//  - this only affects the outputcore (ie will not effect sentrycore).
 	//  - Scope matches the full scope name. IE the below example has the scope
 	//    "foo.bar" not "bar".

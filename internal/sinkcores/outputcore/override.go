@@ -29,7 +29,7 @@ func newOverrideCore(level zapcore.LevelEnabler, overrides []Override, newCore f
 	core := newCore(minOverrideLevel)
 
 	// Only use overrideCore if it could have an effect.
-	if minOverrideLevel == level {
+	if len(overrides) == 0 {
 		return core
 	}
 
@@ -71,14 +71,6 @@ func (c *overrideCore) With(fields []zapcore.Field) zapcore.Core {
 }
 
 func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapcore.CheckedEntry {
-	if c.level.Enabled(ent.Level) {
-		return c.Core.Check(ent, ce)
-	}
-
-	if !c.Core.Enabled(ent.Level) {
-		return ce
-	}
-
 	for _, o := range c.overrides {
 		if !strings.HasPrefix(ent.LoggerName, o.Scope) {
 			continue
@@ -91,6 +83,15 @@ func (c *overrideCore) Check(ent zapcore.Entry, ce *zapcore.CheckedEntry) *zapco
 		if o.Level.Enabled(ent.Level) {
 			return c.Core.Check(ent, ce)
 		}
+		return ce
+	}
+
+	if c.level.Enabled(ent.Level) {
+		return c.Core.Check(ent, ce)
+	}
+
+	if !c.Core.Enabled(ent.Level) {
+		return ce
 	}
 
 	return ce

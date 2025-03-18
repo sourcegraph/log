@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/google/go-cmp/cmp"
+	"github.com/hexops/autogold/v2"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -24,88 +24,114 @@ func TestOutputSink_Check(t *testing.T) {
 
 	logs := `
 foo debug
+foo info
 foo error
 foo.bar debug
+foo.bar info
 foo.bar error
 foo.bar.baz debug
+foo.bar.baz info
 foo.bar.baz error
 foo.bar.baz1 debug
+foo.bar.baz1 info
 foo.bar.baz1 error
 `
 
 	cases := []struct {
 		Name string
 		Env  map[string]string
-		Want string
+		Want autogold.Value
 	}{{
 		Name: "error",
 		Env: map[string]string{
 			EnvLogLevel: "error",
 		},
-		Want: `
+		Want: autogold.Expect(`
 foo error
 foo.bar error
 foo.bar.baz error
 foo.bar.baz1 error
-`,
+`),
 	}, {
 		Name: "debug",
 		Env: map[string]string{
 			EnvLogLevel: "debug",
 		},
-		Want: logs,
+		Want: autogold.Expect(logs),
 	}, {
 		Name: "none",
 		Env: map[string]string{
 			EnvLogLevel: "none",
 		},
-		Want: "",
+		Want: autogold.Expect("\n"),
 	}, {
 		Name: "scope",
 		Env: map[string]string{
 			EnvLogLevel:      "error",
 			EnvLogScopeLevel: "foo.bar=debug",
 		},
-		// Should be everything except foo debug
-		Want: `
+		// Should be everything except foo debug and info
+		Want: autogold.Expect(`
 foo error
 foo.bar debug
+foo.bar info
 foo.bar error
 foo.bar.baz debug
+foo.bar.baz info
 foo.bar.baz error
 foo.bar.baz1 debug
+foo.bar.baz1 info
 foo.bar.baz1 error
-`,
+`),
 	}, {
 		Name: "scope two",
 		Env: map[string]string{
 			EnvLogLevel:      "error",
 			EnvLogScopeLevel: "foo.bar.baz=debug,foo.bar.baz1=debug",
 		},
-		// Should be everything except foo and foo.bar debug
-		Want: `
+		// Should be everything except foo and foo.bar debug and info
+		Want: autogold.Expect(`
 foo error
 foo.bar error
 foo.bar.baz debug
+foo.bar.baz info
 foo.bar.baz error
 foo.bar.baz1 debug
+foo.bar.baz1 info
 foo.bar.baz1 error
-`,
+`),
 	}, {
 		Name: "scope deep",
 		Env: map[string]string{
 			EnvLogLevel:      "error",
 			EnvLogScopeLevel: "foo.bar.baz=debug",
 		},
-		Want: `
+		// Should be everything except foo and foo.bar debug and info
+		Want: autogold.Expect(`
 foo error
 foo.bar error
 foo.bar.baz debug
+foo.bar.baz info
 foo.bar.baz error
 foo.bar.baz1 error
-`,
-	}}
-
+`),
+	},
+		{
+			Name: "scope restricting",
+			Env: map[string]string{
+				EnvLogLevel:      "info",
+				EnvLogScopeLevel: "foo.bar=warn",
+			},
+			// no debugs, and no foo.bar.* info
+			Want: autogold.Expect(`
+foo info
+foo error
+foo.bar error
+foo.bar.baz error
+foo.bar.baz1 error
+`),
+		},
+	}
 	for _, tc := range cases {
 		t.Run(tc.Name, func(t *testing.T) {
 			for k, v := range tc.Env {
@@ -131,12 +157,9 @@ foo.bar.baz1 error
 				}
 			}
 
-			want := strings.TrimSpace(tc.Want)
-			got = strings.TrimSpace(got)
-
-			if d := cmp.Diff(want, got); d != "" {
-				t.Errorf("unexpected allowed logs (-want, +got):\n%s", d)
-			}
+			// Add a newline to the expected output so that all expects can be on
+			// newlines at the same indentation
+			tc.Want.Equal(t, "\n"+got)
 		})
 	}
 }
