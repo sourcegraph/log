@@ -111,6 +111,12 @@ var (
 	// This helps prevent key collisions when injecting loggers into sub-components or
 	// third-party libraries.
 	Namespace = zap.Namespace
+
+	// CustomObject constructs a field that carries an object which implements the
+	// ObjectMarshaler interface.
+	CustomObject = zap.Object
+	// (Use a different name above to avoid breaking back-compat, since the
+	// Object func below already has 100+ usages in sg/sg as of 2025-07-17.)
 )
 
 // Object constructs a field that places all the given fields within the given key's
