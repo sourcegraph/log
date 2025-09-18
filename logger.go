@@ -77,6 +77,17 @@ type Logger interface {
 	IncreaseLevel(scope string, description string, level Level) Logger
 }
 
+// InspectableLogger is a Logger that can be inspected in more detail.
+//
+// Most callers should not need to use this interface; it's meant to be
+// used only by wrapper types which themselves provide a Logger interface.
+type InspectableLogger interface {
+	Logger
+
+	// WillLog returns true if messages at the given level are logged by this logger.
+	WillLog(level Level) bool
+}
+
 // Scoped returns the global logger and sets it up with the given scope and OpenTelemetry
 // compliant implementation. Instead of using this everywhere a log is needed, callers
 // should hold a reference to the Logger and pass it in to places that need to log.
@@ -136,6 +147,7 @@ type zapAdapter struct {
 }
 
 var _ Logger = &zapAdapter{}
+var _ InspectableLogger = &zapAdapter{}
 
 func (z *zapAdapter) Scoped(scope string) Logger {
 	var newFullScope string
@@ -208,6 +220,10 @@ func (z *zapAdapter) IncreaseLevel(scope string, description string, level Level
 		fullScope:  z.fullScope,
 		attributes: z.attributes,
 	}
+}
+
+func (z *zapAdapter) WillLog(level Level) bool {
+	return z.Logger.Level() <= level.Parse()
 }
 
 // WithCore is an internal API used to allow packages like logtest to hook into
