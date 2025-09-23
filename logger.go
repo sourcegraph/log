@@ -69,12 +69,6 @@ type Logger interface {
 	// building wrappers around the Logger, using AddCallerSkip prevents the Logger from
 	// always reporting the wrapper code as the caller.
 	AddCallerSkip(int) Logger
-	// IncreaseLevel creates a logger that only logs at or above the given level for the given
-	// scope. To disable all output, you can use LogLevelNone.
-	//
-	// IncreaseLevel is only allowed to increase the level the Logger was initialized at -
-	// it has no affect if the preset level is higher than the indicated level.
-	IncreaseLevel(scope string, description string, level Level) Logger
 }
 
 // InspectableLogger is a Logger that can be inspected in more detail.
@@ -83,6 +77,13 @@ type Logger interface {
 // used only by wrapper types which themselves provide a Logger interface.
 type InspectableLogger interface {
 	Logger
+
+	// IncreaseLevel creates a logger that only logs at or above the given level for the given
+	// scope. To disable all output, you can use LogLevelNone.
+	//
+	// IncreaseLevel is only allowed to increase the level the Logger was initialized at -
+	// it has no affect if the preset level is higher than the indicated level.
+	IncreaseLevel(scope string, description string, level Level) Logger
 
 	// WillLog returns true if messages at the given level are logged by this logger.
 	WillLog(level Level) bool
