@@ -29,5 +29,4 @@ jobs:
         with:
           sourcegraph-url: https://sourcegraph.sourcegraph.com/
           sourcegraph-token: ${{ secrets.SRC_ACCESS_TOKEN_S2 }}
-          scip-go-version: v0.2.2
           upload: true
