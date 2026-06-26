@@ -51,22 +51,22 @@ func TestLogger(t *testing.T) {
 	}
 
 	// Nested fields should be in attributes
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"some":  "field",
 		"hello": "world",
 	}, logs[1].Fields["Attributes"])
 
 	// TraceId should be in root, everything else in attributes
 	assert.Equal(t, "1234abcde", logs[2].Fields["TraceId"])
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"some":  "field",
 		"world": "hello",
 	}, logs[2].Fields["Attributes"])
 
 	// Nested fields should be in attributes
-	assert.Equal(t, map[string]interface{}{
+	assert.Equal(t, map[string]any{
 		"some": "field",
-		"object": map[string]interface{}{
+		"object": map[string]any{
 			"field1": "value",
 			"field2": "value",
 		},
