@@ -2,6 +2,7 @@ package logtest
 
 import (
 	"flag"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -68,7 +69,7 @@ type CapturedLog struct {
 	Scope   string
 	Level   log.Level
 	Message string
-	Fields  map[string]interface{}
+	Fields  map[string]any
 }
 
 type CapturedLogs []CapturedLog
@@ -96,12 +97,7 @@ func (cl CapturedLogs) Filter(condition func(l CapturedLog) bool) CapturedLogs {
 // Contains asserts that at least one entry matching the condition exists in the captured
 // logs.
 func (cl CapturedLogs) Contains(condition func(l CapturedLog) bool) bool {
-	for _, l := range cl {
-		if condition(l) {
-			return true
-		}
-	}
-	return false
+	return slices.ContainsFunc(cl, condition)
 }
 
 type LoggerOptions struct {
