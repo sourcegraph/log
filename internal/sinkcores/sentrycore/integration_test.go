@@ -123,17 +123,25 @@ func TestWith(t *testing.T) {
 
 func TestWithTrace(t *testing.T) {
 	a := errors.New("A")
+	traceID := "12312012123120121231201212312012"
+	spanID := "0415201309082013"
 	tc := log.TraceContext{
-		TraceID: "123",
-		SpanID:  "456",
+		TraceID: traceID,
+		SpanID:  spanID,
 	}
 	logger, tr, sync := newTestLogger(t)
 	logger.WithTrace(tc).With(log.Error(a)).Error("msg")
 	sync()
 	assert.Len(t, tr.Events(), 1)
 	attrs := tr.Events()[0].Contexts["log"]
-	assert.Equal(t, "123", attrs["TraceId"])
-	assert.Equal(t, "456", attrs["SpanId"])
+	assert.Equal(t, traceID, attrs["TraceId"])
+	assert.Equal(t, spanID, attrs["SpanId"])
+
+	// Also reflect valid trace IDs into Sentry's specialized trace context.
+	// https://develop.sentry.dev/sdk/foundations/envelopes/event-payloads/contexts/#trace-context
+	traceAttrs := tr.Events()[0].Contexts["trace"]
+	assert.Equal(t, traceID, traceAttrs["trace_id"].(sentry.TraceID).String())
+	assert.Equal(t, spanID, traceAttrs["span_id"].(sentry.SpanID).String())
 }
 
 func TestFields(t *testing.T) {
