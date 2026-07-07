@@ -1,7 +1,6 @@
 package sentrycore
 
 import (
-	"encoding/hex"
 	"fmt"
 	"sync"
 	"time"
@@ -192,45 +191,8 @@ func (w *worker) capture(errCtx *errorContext) {
 			scope.SetContext("error", extraDetails)
 		}
 		scope.SetContext("log", enc.Fields)
-		setTraceContext(scope, enc.Fields)
 		scope.SetTags(tags)
 		scope.SetLevel(level)
 		w.hub.hub.CaptureEvent(event)
 	})
-}
-
-func setTraceContext(scope *sentry.Scope, fields map[string]interface{}) {
-	traceID, ok := fields["TraceId"].(string)
-	if !ok || traceID == "" {
-		return
-	}
-
-	var propagationContext sentry.PropagationContext
-	if !decodeTraceID(&propagationContext.TraceID, traceID) {
-		return
-	}
-
-	spanID, ok := fields["SpanId"].(string)
-	if ok && spanID != "" {
-		if !decodeSpanID(&propagationContext.SpanID, spanID) {
-			return
-		}
-	} else {
-		propagationContext.SpanID = sentry.NewPropagationContext().SpanID
-	}
-
-	scope.SetPropagationContext(propagationContext)
-}
-
-func decodeTraceID(dst *sentry.TraceID, traceID string) bool {
-	return len(traceID) == hex.EncodedLen(len(dst)) && decodeHex(dst[:], traceID)
-}
-
-func decodeSpanID(dst *sentry.SpanID, spanID string) bool {
-	return len(spanID) == hex.EncodedLen(len(dst)) && decodeHex(dst[:], spanID)
-}
-
-func decodeHex(dst []byte, value string) bool {
-	_, err := hex.Decode(dst, []byte(value))
-	return err == nil
 }
