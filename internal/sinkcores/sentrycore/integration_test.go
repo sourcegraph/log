@@ -137,13 +137,13 @@ func TestWithTrace(t *testing.T) {
 }
 
 func TestFields(t *testing.T) {
-	assertEventLogCtx := func(t *testing.T, tr *sentrycore.TransportMock, cb func(map[string]interface{})) {
+	assertEventLogCtx := func(t *testing.T, tr *sentrycore.TransportMock, cb func(map[string]any)) {
 		assert.Len(t, tr.Events(), 1)
 		if len(tr.Events()) < 1 {
 			t.FailNow()
 		}
 		e := tr.Events()[0]
-		assert.IsType(t, map[string]interface{}{}, e.Contexts["log"])
+		assert.IsType(t, map[string]any{}, e.Contexts["log"])
 		cb(tr.Events()[0].Contexts["log"])
 	}
 	e := errors.New("test error")
@@ -152,7 +152,7 @@ func TestFields(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		logger.With(log.Int("int", 4)).Error("msg", log.Error(e))
 		sync()
-		assertEventLogCtx(t, tr, func(ctx map[string]interface{}) {
+		assertEventLogCtx(t, tr, func(ctx map[string]any) {
 			assert.Equal(t, int64(4), ctx["int"])
 		})
 	})
@@ -160,7 +160,7 @@ func TestFields(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		logger.With(log.Int64("int", 4)).Error("msg", log.Error(e))
 		sync()
-		assertEventLogCtx(t, tr, func(ctx map[string]interface{}) {
+		assertEventLogCtx(t, tr, func(ctx map[string]any) {
 			assert.Equal(t, int64(4), ctx["int"])
 		})
 	})
@@ -168,7 +168,7 @@ func TestFields(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		logger.With(log.String("string", "foo")).Error("msg", log.Error(e))
 		sync()
-		assertEventLogCtx(t, tr, func(ctx map[string]interface{}) {
+		assertEventLogCtx(t, tr, func(ctx map[string]any) {
 			assert.Equal(t, "foo", ctx["string"])
 		})
 	})
@@ -176,8 +176,8 @@ func TestFields(t *testing.T) {
 		logger, tr, sync := newTestLogger(t)
 		logger.With(log.Object("object", log.String("string", "foo"), log.Int("int", 4))).Error("msg", log.Error(e))
 		sync()
-		assertEventLogCtx(t, tr, func(ctx map[string]interface{}) {
-			assert.Equal(t, map[string]interface{}{"int": int64(4), "string": "foo"}, ctx["object"])
+		assertEventLogCtx(t, tr, func(ctx map[string]any) {
+			assert.Equal(t, map[string]any{"int": int64(4), "string": "foo"}, ctx["object"])
 		})
 	})
 }
@@ -219,12 +219,12 @@ func TestConcurrentLogging(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Add(10)
 		f := func() {
-			for i := 0; i < 10; i++ {
+			for range 10 {
 				logger.With(log.Error(e)).Error("msg")
 			}
 			wg.Done()
 		}
-		for i := 0; i < 10; i++ {
+		for range 10 {
 			go f()
 		}
 		wg.Wait()
@@ -241,7 +241,7 @@ func TestNeverBlock(t *testing.T) {
 	c := sentrycore.NewCore(hub)
 	c.Stop()
 
-	for i := 0; i < 2048; i++ {
+	for range 2048 {
 		c.Write(zapcore.Entry{Level: zapcore.ErrorLevel, Message: "should not block"}, []zapcore.Field{log.Error(e)})
 	}
 }
