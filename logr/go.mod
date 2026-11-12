@@ -1,6 +1,6 @@
 module github.com/sourcegraph/log/logr
 
-go 1.19
+go 1.26.4
 
 replace github.com/sourcegraph/log => ../
 

@@ -76,7 +76,7 @@ func parseSamplingConfig() (config zap.SamplingConfig, err error) {
 func parseOverrides() ([]outputcore.Override, error) {
 	raw := os.Getenv(EnvLogScopeLevel)
 	var overrides []outputcore.Override
-	for _, kv := range strings.Split(raw, ",") {
+	for kv := range strings.SplitSeq(raw, ",") {
 		if kv == "" {
 			continue
 		}
